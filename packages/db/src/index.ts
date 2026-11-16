@@ -1,4 +1,5 @@
 export { createDb, type CreateDbOptions, type Database } from "./client.js";
+export * from "./constants.js";
 export * from "./schema/index.js";
 
 // Re-exported so consumers share this package's drizzle-orm instance instead of
