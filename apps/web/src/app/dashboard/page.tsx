@@ -1,8 +1,8 @@
 import { count, desc, hazardEvents, ingestionRuns } from "@hazardwatch/db";
 import type { Metadata } from "next";
-import Link from "next/link";
 
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import { AccountActions } from "@/components/layout/account-actions";
+import { SiteHeader } from "@/components/layout/site-header";
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/session";
 
@@ -19,20 +19,16 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-5xl px-6">
-      <header className="border-border flex items-center justify-between border-b py-6">
-        <Link href="/" className="font-mono text-sm font-semibold tracking-widest uppercase">
-          HazardWatch
-        </Link>
-        <div className="flex items-center gap-4">
-          <span className="text-muted text-sm">{user.email}</span>
-          <SignOutButton />
-        </div>
-      </header>
+    <>
+      <SiteHeader>
+        <AccountActions />
+      </SiteHeader>
 
-      <section className="py-10">
+      <main className="mx-auto max-w-5xl px-6 py-10">
         <h1 className="text-2xl font-semibold">Welcome, {user.name}</h1>
-        <p className="text-muted mt-1">Here is the current state of the hazard feed.</p>
+        <p className="text-muted mt-1">
+          Signed in as {user.email}. Here is the current state of the hazard feed.
+        </p>
 
         <dl className="mt-8 grid gap-4 sm:grid-cols-2">
           <div className="border-border bg-surface-raised rounded-lg border p-5">
@@ -48,7 +44,7 @@ export default async function DashboardPage() {
             </dd>
           </div>
         </dl>
-      </section>
-    </main>
+      </main>
+    </>
   );
 }

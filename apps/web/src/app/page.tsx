@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { GuestActions, SiteHeader } from "@/components/layout/site-header";
 
 const features = [
   {
@@ -17,25 +17,12 @@ const features = [
 
 export default function HomePage() {
   return (
-    <main className="mx-auto flex min-h-dvh max-w-5xl flex-col px-6">
-      <header className="flex items-center justify-between py-6">
-        <span className="font-mono text-sm font-semibold tracking-widest uppercase">
-          HazardWatch
-        </span>
-        <nav className="flex items-center gap-4 text-sm">
-          <Link href="/sign-in" className="text-muted hover:text-neutral-100">
-            Sign in
-          </Link>
-          <Link
-            href="/sign-up"
-            className="bg-accent hover:bg-accent-strong rounded-md px-3 py-1.5 font-medium text-neutral-950"
-          >
-            Get started
-          </Link>
-        </nav>
-      </header>
+    <div className="flex min-h-dvh flex-col">
+      <SiteHeader>
+        <GuestActions />
+      </SiteHeader>
 
-      <section className="flex flex-1 flex-col justify-center py-24">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-6 py-24">
         <p className="text-accent font-mono text-xs tracking-widest uppercase">
           Open-source hazard intelligence
         </p>
@@ -58,11 +45,13 @@ export default function HomePage() {
             </li>
           ))}
         </ul>
-      </section>
+      </main>
 
-      <footer className="border-border text-muted border-t py-6 text-xs">
-        Data may be delayed or incomplete. Do not use for emergency response.
+      <footer className="border-border text-muted border-t">
+        <p className="mx-auto max-w-5xl px-6 py-6 text-xs">
+          Data may be delayed or incomplete. Do not use for emergency response.
+        </p>
       </footer>
-    </main>
+    </div>
   );
 }
