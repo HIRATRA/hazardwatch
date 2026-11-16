@@ -11,27 +11,12 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-export const hazardSources = ["usgs", "nasa_firms", "gdacs"] as const;
-export const hazardKinds = [
-  "earthquake",
-  "wildfire",
-  "tropical_cyclone",
-  "flood",
-  "volcano",
-  "drought",
-] as const;
-export const hazardSeverities = ["minor", "moderate", "severe", "extreme"] as const;
-export const ingestionStatuses = ["running", "succeeded", "failed"] as const;
+import { hazardKinds, hazardSeverities, hazardSources, ingestionStatuses } from "../constants.js";
 
 export const hazardSource = pgEnum("hazard_source", hazardSources);
 export const hazardKind = pgEnum("hazard_kind", hazardKinds);
 export const hazardSeverity = pgEnum("hazard_severity", hazardSeverities);
 export const ingestionStatus = pgEnum("ingestion_status", ingestionStatuses);
-
-export type HazardSource = (typeof hazardSources)[number];
-export type HazardKind = (typeof hazardKinds)[number];
-export type HazardSeverity = (typeof hazardSeverities)[number];
-export type IngestionStatus = (typeof ingestionStatuses)[number];
 
 /**
  * A single hazard observation normalised from an upstream feed.
