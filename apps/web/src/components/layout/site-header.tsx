@@ -14,9 +14,16 @@ export function SiteHeader({ children, fullWidth = false }: SiteHeaderProps) {
       <div
         className={`flex items-center justify-between gap-6 px-6 py-4 ${fullWidth ? "" : "mx-auto max-w-5xl"}`}
       >
-        <Link href="/" className="font-mono text-sm font-semibold tracking-widest uppercase">
-          HazardWatch
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/" className="font-mono text-sm font-semibold tracking-widest uppercase">
+            HazardWatch
+          </Link>
+          <nav aria-label="Main" className="text-sm">
+            <Link href="/map" className="text-muted hover:text-neutral-100">
+              Live map
+            </Link>
+          </nav>
+        </div>
         <div className="flex items-center gap-4 text-sm">{children}</div>
       </div>
     </header>

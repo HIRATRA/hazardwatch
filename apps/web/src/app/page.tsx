@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { GuestActions, SiteHeader } from "@/components/layout/site-header";
 
 const features = [
@@ -33,6 +35,20 @@ export default function HomePage() {
           HazardWatch aggregates public data on natural hazards worldwide, plots it on a live map,
           and alerts you the moment an event reaches your watch zones.
         </p>
+        <div className="mt-10 flex flex-wrap gap-3">
+          <Link
+            href="/map"
+            className="bg-accent hover:bg-accent-strong rounded-md px-4 py-2 text-sm font-medium text-neutral-950"
+          >
+            Open the live map
+          </Link>
+          <Link
+            href="/sign-up"
+            className="border-border hover:bg-surface-raised rounded-md border px-4 py-2 text-sm font-medium"
+          >
+            Create an account
+          </Link>
+        </div>
 
         <ul className="mt-16 grid gap-4 sm:grid-cols-3">
           {features.map((feature) => (
