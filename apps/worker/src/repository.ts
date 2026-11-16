@@ -21,6 +21,7 @@ export interface RunResult {
 export interface IngestionRepository {
   startRun(source: HazardSource): Promise<string>;
   finishRun(runId: string, result: RunResult): Promise<void>;
+  /** Inserts new events and updates revised ones. Resolves to how many rows were written. */
   upsertEvents(events: readonly IngestedEvent[]): Promise<number>;
 }
 
@@ -69,6 +70,10 @@ export function createIngestionRepository(db: Database): IngestionRepository {
               sourceUpdatedAt: sql`excluded.source_updated_at`,
               updatedAt: sql`now()`,
             },
+            // Feeds are polled far more often than events change. When the source
+            // reports a revision time, rewrite the row only if it moved on.
+            setWhere: sql`excluded.source_updated_at is null
+              or excluded.source_updated_at is distinct from ${hazardEvents.sourceUpdatedAt}`,
           })
           .returning({ id: hazardEvents.id });
         upserted += rows.length;
