@@ -12,7 +12,8 @@ interactive map, and alerts you when an event hits an area you care about.
 | ---------------------------------------------- | ------- |
 | Accounts with email and password               | Done    |
 | PostGIS event store and ingestion pipeline     | Done    |
-| USGS, NASA FIRMS and GDACS feeds               | Planned |
+| USGS earthquake feed                           | Done    |
+| NASA FIRMS wildfire and GDACS feeds            | Planned |
 | Interactive map                                | Planned |
 | Watch zones and alerts                         | Planned |
 | Assistant that summarises the situation nearby | Planned |

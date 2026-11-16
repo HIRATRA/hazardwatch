@@ -75,7 +75,11 @@ only integration point between the web app and the worker.
 - **Sources.** Each upstream feed is an adapter implementing the `Source`
   interface: an identifier, a polling interval and a `fetchEvents` function
   that returns events in the normalised shape. Feed-specific formats never
-  leave the adapter.
+  leave the adapter. Adapters validate upstream payloads with zod: a
+  malformed record is logged and skipped, while an unrecognisable payload
+  fails the run.
+- **HTTP.** Requests go through a shared helper that combines a timeout
+  with the shutdown signal, so a stalled server cannot block a source.
 - **Scheduler.** Every source is polled on its own interval. The next run
   for a source starts only after the previous one has finished, so a slow
   feed cannot pile up concurrent requests.
@@ -84,9 +88,30 @@ only integration point between the web app and the worker.
   than thrown, so one broken feed never stops the others.
 - **Writes.** Events are upserted in batches keyed on
   `(source, external_id)`. Fetching the same feed twice is a no-op, and
-  events revised upstream are updated in place.
+  events revised upstream are updated in place. When a source reports a
+  revision time, unchanged events are not rewritten at all.
 - **Lifecycle.** `SIGINT` and `SIGTERM` abort pending waits and close the
   connection pool, which keeps restarts and deployments clean.
+
+#### Sources
+
+| Source | Feed                                                | Polled every | Hazard kinds |
+| ------ | --------------------------------------------------- | ------------ | ------------ |
+| `usgs` | Magnitude 2.5+ earthquakes worldwide, past 24 hours | 1 minute     | Earthquake   |
+
+**USGS.** The [summary feed](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php)
+is regenerated every minute and covers a sliding 24-hour window, so the
+worker catches up on its own after a short outage. Other seismic events,
+such as quarry blasts, are ignored. Severity combines the magnitude with
+the [PAGER](https://earthquake.usgs.gov/data/pager/) alert level, which
+estimates human and economic impact, and keeps the higher of the two:
+
+| Severity   | Magnitude     | PAGER alert |
+| ---------- | ------------- | ----------- |
+| `minor`    | below 5.0     | green       |
+| `moderate` | 5.0 to 5.9    | yellow      |
+| `severe`   | 6.0 to 6.9    | orange      |
+| `extreme`  | 7.0 and above | red         |
 
 ### Database package (`packages/db`)
 
@@ -162,8 +187,7 @@ platform.
 
 The following parts are planned and not built yet:
 
-- Source adapters for USGS earthquakes, NASA FIRMS wildfires and GDACS
-  alerts.
+- Source adapters for NASA FIRMS wildfires and GDACS alerts.
 - An interactive map of current events.
 - Watch zones: user-defined areas matched against new events with PostGIS
   spatial queries.
