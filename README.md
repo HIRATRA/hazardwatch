@@ -6,6 +6,63 @@ interactive map, and alerts you when an event hits an area you care about.
 
 > Early development. Expect breaking changes.
 
+## Status
+
+| Capability                                     | State   |
+| ---------------------------------------------- | ------- |
+| Accounts with email and password               | Done    |
+| PostGIS event store and ingestion pipeline     | Done    |
+| USGS, NASA FIRMS and GDACS feeds               | Planned |
+| Interactive map                                | Planned |
+| Watch zones and alerts                         | Planned |
+| Assistant that summarises the situation nearby | Planned |
+
+## Tech stack
+
+- **Web:** Next.js 16 (App Router), React 19, Tailwind CSS 4
+- **Authentication:** Better Auth
+- **Data:** PostgreSQL 17 with PostGIS, Drizzle ORM
+- **Ingestion:** Node.js worker with pino logging
+- **Tooling:** TypeScript, pnpm workspaces, Turborepo, ESLint, Prettier,
+  Vitest, Conventional Commits
+
+## Getting started
+
+You need Node.js 22.12 or later, pnpm 10 and Docker.
+
+```sh
+pnpm install
+cp .env.example .env    # then set BETTER_AUTH_SECRET
+docker compose up -d    # PostgreSQL with PostGIS on port 5433
+pnpm db:migrate
+pnpm dev
+```
+
+The web app runs on <http://localhost:3000>. Generate a secret with
+`openssl rand -base64 32`.
+
+## Project structure
+
+```
+apps/
+  web/       Next.js application: pages, authentication, API routes
+  worker/    Ingestion worker that polls hazard feeds
+packages/
+  db/        Drizzle schema, database client and migrations
+docs/
+  architecture.md
+  adr/       Architecture decision records
+```
+
+See [docs/architecture.md](docs/architecture.md) for how the pieces fit
+together and [docs/adr](docs/adr/README.md) for the reasoning behind the main
+technical choices.
+
+## Contributing
+
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the
+development workflow, branch naming and commit conventions.
+
 ## License
 
 [MIT](LICENSE)
