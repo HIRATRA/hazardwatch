@@ -5,12 +5,13 @@ decision: the context at the time, the option chosen and its consequences.
 Records are immutable once accepted. A decision that changes later gets a
 new record that supersedes the old one.
 
-| ADR                                                 | Title                                            | Status   |
-| --------------------------------------------------- | ------------------------------------------------ | -------- |
-| [0001](0001-use-a-pnpm-and-turborepo-monorepo.md)   | Use a pnpm and Turborepo monorepo                | Accepted |
-| [0002](0002-store-geospatial-data-in-postgis.md)    | Store hazard events in PostgreSQL with PostGIS   | Accepted |
-| [0003](0003-use-better-auth-for-authentication.md)  | Use Better Auth for authentication               | Accepted |
-| [0004](0004-run-ingestion-in-a-dedicated-worker.md) | Run feed ingestion in a dedicated worker process | Accepted |
+| ADR                                                       | Title                                              | Status   |
+| --------------------------------------------------------- | -------------------------------------------------- | -------- |
+| [0001](0001-use-a-pnpm-and-turborepo-monorepo.md)         | Use a pnpm and Turborepo monorepo                  | Accepted |
+| [0002](0002-store-geospatial-data-in-postgis.md)          | Store hazard events in PostgreSQL with PostGIS     | Accepted |
+| [0003](0003-use-better-auth-for-authentication.md)        | Use Better Auth for authentication                 | Accepted |
+| [0004](0004-run-ingestion-in-a-dedicated-worker.md)       | Run feed ingestion in a dedicated worker process   | Accepted |
+| [0005](0005-render-maps-with-maplibre-and-openfreemap.md) | Render maps with MapLibre GL and OpenFreeMap tiles | Accepted |
 
 ## Writing a new record
 

@@ -14,6 +14,7 @@ share one PostgreSQL database.
 flowchart LR
     feeds["Open data feeds<br/>USGS, NASA FIRMS, GDACS"]
     browser(("Browser"))
+    tiles["OpenFreeMap<br/>vector tiles"]
 
     subgraph worker ["apps/worker"]
         scheduler["Scheduler"] --> adapters["Source adapters"]
@@ -37,6 +38,7 @@ flowchart LR
     repository --> runs
     browser --> pages
     browser --> authApi
+    browser -- "basemap" --> tiles
     pages --> events
     pages --> runs
     authApi --> authTables
@@ -69,6 +71,18 @@ only integration point between the web app and the worker.
 - **Configuration.** Environment variables are validated with zod when the
   server starts. Server-only modules import `server-only` so they can never
   end up in a client bundle.
+- **Live map.** `/map` is public. The page reads its filters (period and
+  minimum severity) from the URL, queries the most recent matching events,
+  capped at 2,000, and hands them to a client component that renders them
+  with MapLibre GL on OpenFreeMap tiles (see [ADR 0005](adr/0005-render-maps-with-maplibre-and-openfreemap.md)).
+  Changing a filter navigates to a new URL, and the page calls
+  `router.refresh()` every minute while visible. Both re-render on the
+  server and keep client state such as the map position and the selected
+  event.
+- **Code shared with the browser.** Client components import domain values
+  from `@hazardwatch/db/constants`, a dependency-free entry point. The main
+  entry point pulls in Drizzle and the PostgreSQL driver and is reserved
+  for server code.
 
 ### Ingestion worker (`apps/worker`)
 
@@ -188,7 +202,6 @@ platform.
 The following parts are planned and not built yet:
 
 - Source adapters for NASA FIRMS wildfires and GDACS alerts.
-- An interactive map of current events.
 - Watch zones: user-defined areas matched against new events with PostGIS
   spatial queries.
 - Alerts sent when an event affects a watch zone.

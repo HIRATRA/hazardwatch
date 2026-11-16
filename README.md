@@ -14,13 +14,14 @@ interactive map, and alerts you when an event hits an area you care about.
 | PostGIS event store and ingestion pipeline     | Done    |
 | USGS earthquake feed                           | Done    |
 | NASA FIRMS wildfire and GDACS feeds            | Planned |
-| Interactive map                                | Planned |
+| Interactive map with filters                   | Done    |
 | Watch zones and alerts                         | Planned |
 | Assistant that summarises the situation nearby | Planned |
 
 ## Tech stack
 
 - **Web:** Next.js 16 (App Router), React 19, Tailwind CSS 4
+- **Maps:** MapLibre GL with OpenFreeMap vector tiles, no API key needed
 - **Authentication:** Better Auth
 - **Data:** PostgreSQL 17 with PostGIS, Drizzle ORM
 - **Ingestion:** Node.js worker with pino logging
