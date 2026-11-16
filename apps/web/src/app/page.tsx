@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const features = [
   {
     title: "Live hazard map",
@@ -20,6 +22,17 @@ export default function HomePage() {
         <span className="font-mono text-sm font-semibold tracking-widest uppercase">
           HazardWatch
         </span>
+        <nav className="flex items-center gap-4 text-sm">
+          <Link href="/sign-in" className="text-muted hover:text-neutral-100">
+            Sign in
+          </Link>
+          <Link
+            href="/sign-up"
+            className="bg-accent hover:bg-accent-strong rounded-md px-3 py-1.5 font-medium text-neutral-950"
+          >
+            Get started
+          </Link>
+        </nav>
       </header>
 
       <section className="flex flex-1 flex-col justify-center py-24">
