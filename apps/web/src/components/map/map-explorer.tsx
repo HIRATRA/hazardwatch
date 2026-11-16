@@ -10,6 +10,10 @@ import { EventDetails } from "./event-details";
 import { EventList } from "./event-list";
 import { MapFilters } from "./map-filters";
 import { SeverityLegend } from "./severity";
+import { useAutoRefresh } from "./use-auto-refresh";
+
+/** The workers poll their feeds every minute, so refreshing faster brings nothing. */
+const REFRESH_INTERVAL_MS = 60_000;
 
 // WebGL only exists in the browser, and loading MapLibre separately keeps it
 // out of the initial JavaScript bundle.
@@ -26,6 +30,7 @@ interface MapExplorerProps extends EventsResult {
 export function MapExplorer({ events, truncated, generatedAt, filters }: MapExplorerProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const clearSelection = useCallback(() => setSelectedId(null), []);
+  useAutoRefresh(REFRESH_INTERVAL_MS);
 
   // The selection is dropped implicitly when a refresh or a filter removes the event.
   const selectedEvent = events.find((event) => event.id === selectedId) ?? null;
