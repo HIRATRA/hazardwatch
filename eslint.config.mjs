@@ -1,6 +1,9 @@
 import js from "@eslint/js";
+import nextVitals from "eslint-config-next/core-web-vitals";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
 import tseslint from "typescript-eslint";
+
+const webFiles = ["apps/web/**/*.{js,mjs,ts,tsx}"];
 
 export default tseslint.config(
   {
@@ -22,6 +25,11 @@ export default tseslint.config(
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
     },
+  },
+  ...nextVitals.map((config) => ({ ...config, files: webFiles })),
+  {
+    files: webFiles,
+    settings: { next: { rootDir: "apps/web" } },
   },
   {
     files: ["**/*.{js,mjs,cjs}"],
