@@ -17,6 +17,9 @@
     "lint:fix": "eslint . --cache --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
+    "db:generate": "pnpm --filter @hazardwatch/db db:generate",
+    "db:migrate": "turbo run build --filter=@hazardwatch/db && pnpm --filter @hazardwatch/db db:migrate",
+    "db:studio": "pnpm --filter @hazardwatch/db db:studio",
     "prepare": "husky"
   },
   "devDependencies": {
