@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: 1
+  TURBO_TELEMETRY_DISABLED: 1
+
+jobs:
+  verify:
+    name: Lint, type-check, test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Placeholders: the build validates configuration but never connects to anything.
+      DATABASE_URL: postgres://hazardwatch:hazardwatch@localhost:5432/hazardwatch
+      BETTER_AUTH_SECRET: ci-placeholder-secret-with-at-least-32-chars
+      BETTER_AUTH_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Check formatting
+        run: pnpm format:check
+      # Type-checking builds the shared packages that type-aware linting relies on.
+      - name: Type-check
+        run: pnpm typecheck
+      - name: Lint
+        run: pnpm lint
+      - name: Test
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+
+  database:
+    name: Database migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_USER: hazardwatch
+          POSTGRES_PASSWORD: hazardwatch
+          POSTGRES_DB: hazardwatch
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hazardwatch"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://hazardwatch:hazardwatch@localhost:5432/hazardwatch
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Apply migrations to an empty database
+        run: pnpm db:migrate
+      - name: Check that every schema change has a migration
+        run: |
+          pnpm db:generate
+          if [ -n "$(git status --porcelain -- packages/db/drizzle)" ]; then
+            echo "::error::The Drizzle schema has changes without a migration. Run pnpm db:generate and commit the result."
+            git status --short -- packages/db/drizzle
+            exit 1
+          fi
