@@ -7,6 +7,7 @@
     "BETTER_AUTH_URL",
     "SMTP_URL",
     "EMAIL_FROM",
+    "APP_URL",
     "LOG_LEVEL"
   ],
   "tasks": {
