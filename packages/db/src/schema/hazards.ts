@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   geometry,
   index,
@@ -53,6 +54,9 @@ export const hazardEvents = pgTable(
   (t) => [
     uniqueIndex("hazard_events_source_external_id_idx").on(t.source, t.externalId),
     index("hazard_events_location_idx").using("gist", t.location),
+    // Distances in metres are measured on the geography type, which this
+    // index serves, for instance to find the events within a watch zone.
+    index("hazard_events_location_geography_idx").using("gist", sql`(${t.location}::geography)`),
     index("hazard_events_active_until_idx").on(t.activeUntil.desc()),
     index("hazard_events_kind_idx").on(t.kind),
   ],

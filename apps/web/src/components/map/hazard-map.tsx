@@ -1,28 +1,21 @@
 "use client";
 
-import "maplibre-gl/dist/maplibre-gl.css";
-
-import {
+import type {
+  ExpressionSpecification,
+  FilterSpecification,
+  GeoJSONSource,
   Map as MapLibreMap,
-  NavigationControl,
-  setWorkerUrl,
-  type ExpressionSpecification,
-  type FilterSpecification,
-  type GeoJSONSource,
 } from "maplibre-gl";
 import { useEffect, useMemo, useRef } from "react";
 
 import { toFeatureCollection } from "@/lib/events/geojson";
 import type { MapEvent } from "@/lib/events/types";
+import { zoneBounds } from "@/lib/zones/geometry";
+import type { ZoneShape } from "@/lib/zones/types";
 
+import { createMap } from "./maplibre";
 import { severityStyles } from "./severity";
-
-// MapLibre 6 parses tiles in a separate worker module. Referencing it through
-// `new URL(…, import.meta.url)` lets the bundler emit and serve it as an asset.
-setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).toString());
-
-/** Free OpenStreetMap vector tiles, no API key required. */
-const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
+import { addZoneLayers } from "./zone-layers";
 
 const SOURCE_ID = "events";
 const EVENTS_LAYER_ID = "events";
@@ -62,6 +55,11 @@ interface HazardMapProps {
   events: readonly MapEvent[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  /**
+   * Watch zone to outline below the events. The map opens on it, and it is
+   * read once, when the map is created.
+   */
+  zone?: ZoneShape | undefined;
 }
 
 /**
@@ -70,16 +68,16 @@ interface HazardMapProps {
  * The map instance is created once and updated imperatively when props
  * change, so React re-renders never rebuild the WebGL context.
  */
-export function HazardMap({ events, selectedId, onSelect }: HazardMapProps) {
+export function HazardMap({ events, selectedId, onSelect, zone }: HazardMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
 
   const data = useMemo(() => toFeatureCollection(events), [events]);
 
   // Latest values for handlers registered once, when the map is created.
-  const latest = useRef({ data, events, selectedId, onSelect });
+  const latest = useRef({ data, events, selectedId, onSelect, zone });
   useEffect(() => {
-    latest.current = { data, events, selectedId, onSelect };
+    latest.current = { data, events, selectedId, onSelect, zone };
   });
 
   useEffect(() => {
@@ -88,17 +86,19 @@ export function HazardMap({ events, selectedId, onSelect }: HazardMapProps) {
       return;
     }
 
-    const map = new MapLibreMap({
+    const initialZone = latest.current.zone;
+    const map = createMap(
       container,
-      style: STYLE_URL,
-      center: [10, 20],
-      zoom: 1.3,
-      attributionControl: { compact: true },
-    });
+      initialZone ? { bounds: zoneBounds(initialZone), fitBoundsOptions: { padding: 40 } } : {},
+    );
     mapRef.current = map;
-    map.addControl(new NavigationControl({ showCompass: false }), "top-right");
 
-    map.on("load", () => {
+    // Fired before tiles arrive, and again when the style is rebuilt after a
+    // lost WebGL context, which drops every source and layer added here.
+    map.on("style.load", () => {
+      if (initialZone) {
+        addZoneLayers(map, initialZone);
+      }
       map.addSource(SOURCE_ID, { type: "geojson", data: latest.current.data });
       map.addLayer({
         id: EVENTS_LAYER_ID,

@@ -15,6 +15,13 @@
       "when": 1794931994218,
       "tag": "0001_track_event_activity",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794938536683,
+      "tag": "0002_add_watch_zones",
+      "breakpoints": true
     }
   ]
 }

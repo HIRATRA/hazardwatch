@@ -22,6 +22,10 @@ export const hazardSeverities = ["minor", "moderate", "severe", "extreme"] as co
 
 export const ingestionStatuses = ["running", "succeeded", "failed"] as const;
 
+/** Bounds of a watch zone radius, in kilometres. */
+export const minZoneRadiusKm = 1;
+export const maxZoneRadiusKm = 1000;
+
 export type HazardSource = (typeof hazardSources)[number];
 export type HazardKind = (typeof hazardKinds)[number];
 export type HazardSeverity = (typeof hazardSeverities)[number];
