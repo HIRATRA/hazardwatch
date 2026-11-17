@@ -8,15 +8,16 @@ interactive map, and alerts you when an event hits an area you care about.
 
 ## Status
 
-| Capability                                     | State   |
-| ---------------------------------------------- | ------- |
-| Accounts with email and password               | Done    |
-| PostGIS event store and ingestion pipeline     | Done    |
-| USGS earthquake feed                           | Done    |
-| NASA FIRMS wildfire and GDACS feeds            | Planned |
-| Interactive map with filters                   | Done    |
-| Watch zones and alerts                         | Planned |
-| Assistant that summarises the situation nearby | Planned |
+| Capability                                                       | State   |
+| ---------------------------------------------------------------- | ------- |
+| Accounts with email and password                                 | Done    |
+| PostGIS event store and ingestion pipeline                       | Done    |
+| USGS earthquake feed                                             | Done    |
+| GDACS alerts for cyclones, floods, volcanoes, droughts and fires | Done    |
+| NASA FIRMS satellite fire detections                             | Planned |
+| Interactive map with filters                                     | Done    |
+| Watch zones and alerts                                           | Planned |
+| Assistant that summarises the situation nearby                   | Planned |
 
 ## Tech stack
 

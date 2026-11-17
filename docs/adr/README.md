@@ -12,6 +12,7 @@ new record that supersedes the old one.
 | [0003](0003-use-better-auth-for-authentication.md)        | Use Better Auth for authentication                 | Accepted |
 | [0004](0004-run-ingestion-in-a-dedicated-worker.md)       | Run feed ingestion in a dedicated worker process   | Accepted |
 | [0005](0005-render-maps-with-maplibre-and-openfreemap.md) | Render maps with MapLibre GL and OpenFreeMap tiles | Accepted |
+| [0006](0006-model-hazard-events-as-activity-periods.md)   | Model hazard events as activity periods            | Accepted |
 
 ## Writing a new record
 

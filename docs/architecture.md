@@ -71,10 +71,11 @@ only integration point between the web app and the worker.
 - **Configuration.** Environment variables are validated with zod when the
   server starts. Server-only modules import `server-only` so they can never
   end up in a client bundle.
-- **Live map.** `/map` is public. The page reads its filters (period and
-  minimum severity) from the URL, queries the most recent matching events,
-  capped at 2,000, and hands them to a client component that renders them
-  with MapLibre GL on OpenFreeMap tiles (see [ADR 0005](adr/0005-render-maps-with-maplibre-and-openfreemap.md)).
+- **Live map.** `/map` is public. The page reads its filters (hazard type,
+  period and minimum severity) from the URL, queries the matching events
+  active during the period, most recently active first and capped at
+  2,000, and hands them to a client component that renders them with
+  MapLibre GL on OpenFreeMap tiles (see [ADR 0005](adr/0005-render-maps-with-maplibre-and-openfreemap.md)).
   Changing a filter navigates to a new URL, and the page calls
   `router.refresh()` every minute while visible. Both re-render on the
   server and keep client state such as the map position and the selected
@@ -109,9 +110,10 @@ only integration point between the web app and the worker.
 
 #### Sources
 
-| Source | Feed                                                | Polled every | Hazard kinds |
-| ------ | --------------------------------------------------- | ------------ | ------------ |
-| `usgs` | Magnitude 2.5+ earthquakes worldwide, past 24 hours | 1 minute     | Earthquake   |
+| Source  | Feed                                                | Polled every | Hazard kinds                                           |
+| ------- | --------------------------------------------------- | ------------ | ------------------------------------------------------ |
+| `usgs`  | Magnitude 2.5+ earthquakes worldwide, past 24 hours | 1 minute     | Earthquake                                             |
+| `gdacs` | Disaster alerts modified in the past two days       | 10 minutes   | Tropical cyclone, flood, volcano, drought and wildfire |
 
 **USGS.** The [summary feed](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php)
 is regenerated every minute and covers a sliding 24-hour window, so the
@@ -126,6 +128,35 @@ estimates human and economic impact, and keeps the higher of the two:
 | `moderate` | 5.0 to 5.9    | yellow      |
 | `severe`   | 6.0 to 6.9    | orange      |
 | `extreme`  | 7.0 and above | red         |
+
+**GDACS.** The [Global Disaster Alert and Coordination System](https://www.gdacs.org)
+assesses the humanitarian impact of disasters worldwide. The worker pages
+through the [event list API](https://www.gdacs.org/gdacsapi/swagger/index.html)
+for every event modified during the past two days, so revisions are applied
+in place and an outage of up to two days is caught up. GDACS also reports
+earthquakes, but it takes them from USGS, so they are left out to avoid
+duplicates.
+
+A few quirks of the API are handled in the adapter:
+
+- Timestamps are in UTC but carry no time zone designator.
+- A query that matches nothing, including a page past the last one,
+  answers `404` rather than an empty list.
+- The list can shift between two page requests, so an event may be listed
+  twice in one run. The most recently modified copy is kept, since an
+  upsert cannot touch the same row twice.
+
+Each event is located at the centroid of the affected area. It is active
+from its `fromdate` to its `todate`, which moves forward as GDACS updates
+the event. Severity follows the event's alert level, which estimates
+whether international assistance will be needed, on the same colour scale
+as PAGER:
+
+| Severity  | GDACS alert | International assistance |
+| --------- | ----------- | ------------------------ |
+| `minor`   | green       | Unlikely                 |
+| `severe`  | orange      | Possibly needed          |
+| `extreme` | red         | Likely needed            |
 
 ### Database package (`packages/db`)
 
@@ -150,6 +181,12 @@ estimates human and economic impact, and keeps the higher of the two:
 containment queries stay fast as the table grows. Fields shared by every
 source are proper columns; anything source-specific is kept in a `jsonb`
 `properties` column rather than widening the table.
+
+Each event is active from `occurred_at` until `active_until`. The two are
+equal for instantaneous events such as earthquakes, while lasting events
+such as floods extend `active_until` with every update. Time windows match
+events on `active_until`, so an event that started long ago but is still
+going on is included (see [ADR 0006](adr/0006-model-hazard-events-as-activity-periods.md)).
 
 ## Ingestion flow
 
@@ -201,7 +238,7 @@ platform.
 
 The following parts are planned and not built yet:
 
-- Source adapters for NASA FIRMS wildfires and GDACS alerts.
+- A source adapter for NASA FIRMS satellite fire detections.
 - Watch zones: user-defined areas matched against new events with PostGIS
   spatial queries.
 - Alerts sent when an event affects a watch zone.
