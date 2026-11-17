@@ -5,12 +5,12 @@ import {
   asc,
   count,
   eq,
+  eventInZone,
   gte,
   hazardEvents,
   sql,
   watchZones,
   type HazardSeverity,
-  type SQL,
   type WatchZone,
 } from "@hazardwatch/db";
 import { cache } from "react";
@@ -23,15 +23,6 @@ import type { Zone, ZoneSummary } from "./types";
 
 /** Period over which the zone list counts events. */
 export const RECENT_WINDOW: TimeWindow = "7d";
-
-/**
- * Matches the events located within a watch zone, for queries that involve
- * both tables. Distances are measured on the geography type, which the
- * hazard_events_location_geography_idx index serves.
- */
-export function eventInZone(): SQL {
-  return sql`ST_DWithin(${hazardEvents.location}::geography, ${watchZones.center}::geography, ${watchZones.radiusKm} * 1000)`;
-}
 
 const zoneColumns = {
   id: watchZones.id,

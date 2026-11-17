@@ -1,4 +1,5 @@
 export { createDb, type CreateDbOptions, type Database } from "./client.js";
+export * from "./conditions.js";
 export * from "./constants.js";
 export * from "./schema/index.js";
 
