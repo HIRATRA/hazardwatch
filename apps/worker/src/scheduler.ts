@@ -14,20 +14,38 @@ export async function runScheduler(
   deps: IngestDeps,
   signal: AbortSignal,
 ): Promise<void> {
-  await Promise.all(sources.map((source) => pollSource(source, deps, signal)));
+  await Promise.all(
+    sources.map((source) =>
+      repeatEvery(
+        source.intervalMs,
+        async () => {
+          try {
+            await ingestSource(source, deps, signal);
+          } catch (error) {
+            // Only reachable when the run record itself cannot be written.
+            deps.logger.error({ source: source.id, err: error }, "ingestion bookkeeping failed");
+          }
+        },
+        signal,
+      ),
+    ),
+  );
 }
 
-async function pollSource(source: Source, deps: IngestDeps, signal: AbortSignal) {
+/**
+ * Runs a task, waits for the interval, and starts again until the signal is
+ * aborted. The wait starts once the task has finished, so runs never
+ * overlap. The task must handle its own errors.
+ */
+export async function repeatEvery(
+  intervalMs: number,
+  task: () => Promise<void>,
+  signal: AbortSignal,
+): Promise<void> {
   while (!signal.aborted) {
+    await task();
     try {
-      await ingestSource(source, deps, signal);
-    } catch (error) {
-      // Only reachable when the run record itself cannot be written.
-      deps.logger.error({ source: source.id, err: error }, "ingestion bookkeeping failed");
-    }
-
-    try {
-      await sleep(source.intervalMs, undefined, { signal });
+      await sleep(intervalMs, undefined, { signal });
     } catch {
       return; // aborted while waiting
     }
