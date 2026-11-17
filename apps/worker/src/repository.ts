@@ -67,6 +67,7 @@ export function createIngestionRepository(db: Database): IngestionRepository {
               location: sql`excluded.location`,
               properties: sql`excluded.properties`,
               occurredAt: sql`excluded.occurred_at`,
+              activeUntil: sql`excluded.active_until`,
               sourceUpdatedAt: sql`excluded.source_updated_at`,
               updatedAt: sql`now()`,
             },

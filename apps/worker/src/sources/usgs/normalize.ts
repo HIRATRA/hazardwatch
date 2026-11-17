@@ -50,6 +50,7 @@ export function earthquakeSeverity(
 /** Maps a validated USGS feature to the normalised event shape. */
 export function toIngestedEvent({ id, properties, geometry }: UsgsFeature): IngestedEvent {
   const [longitude, latitude, depthKm] = geometry.coordinates;
+  const occurredAt = new Date(properties.time);
 
   return {
     source: "usgs",
@@ -71,7 +72,9 @@ export function toIngestedEvent({ id, properties, geometry }: UsgsFeature): Inge
       reviewStatus: properties.status ?? null,
       network: properties.net ?? null,
     },
-    occurredAt: new Date(properties.time),
+    occurredAt,
+    // An earthquake is over as soon as it happens.
+    activeUntil: occurredAt,
     sourceUpdatedAt: properties.updated == null ? null : new Date(properties.updated),
   };
 }
