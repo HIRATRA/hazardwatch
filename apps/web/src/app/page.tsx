@@ -13,7 +13,7 @@ const features = [
   },
   {
     title: "Instant alerts",
-    body: "Get an alert as soon as an event reaches one of your zones, from the severity you choose.",
+    body: "Get an alert in the app and by email as soon as an event reaches one of your zones, from the severity you choose.",
   },
 ];
 
