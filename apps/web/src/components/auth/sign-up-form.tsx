@@ -25,6 +25,8 @@ export function SignUpForm() {
       name: getText(form, "name"),
       email: getText(form, "email"),
       password: getText(form, "password", { trim: false }),
+      // Where the link in the confirmation email leads.
+      callbackURL: "/dashboard",
     });
 
     if (error) {

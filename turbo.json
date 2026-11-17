@@ -1,7 +1,14 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "globalDependencies": [".env"],
-  "globalPassThroughEnv": ["DATABASE_URL", "BETTER_AUTH_SECRET", "BETTER_AUTH_URL", "LOG_LEVEL"],
+  "globalPassThroughEnv": [
+    "DATABASE_URL",
+    "BETTER_AUTH_SECRET",
+    "BETTER_AUTH_URL",
+    "SMTP_URL",
+    "EMAIL_FROM",
+    "LOG_LEVEL"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

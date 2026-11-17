@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { EmailVerificationNotice } from "@/components/auth/email-verification-notice";
 import { AccountActions } from "@/components/layout/account-actions";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SeverityDot } from "@/components/map/severity";
@@ -43,6 +44,8 @@ export default async function AlertsPage() {
             </form>
           )}
         </div>
+
+        {!user.emailVerified && <EmailVerificationNotice email={user.email} className="mt-6" />}
 
         {alerts.length === 0 ? (
           <div className="border-border mt-8 rounded-lg border border-dashed px-6 py-12 text-center">
