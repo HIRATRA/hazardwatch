@@ -9,7 +9,7 @@ import { buttonClassName } from "@/components/ui/button";
 import { parseEventFilters } from "@/lib/events/filters";
 import { listEvents } from "@/lib/events/queries";
 import { getSession, requireSession } from "@/lib/session";
-import { describeZoneArea } from "@/lib/zones/format";
+import { describeAlertThreshold, describeZoneArea } from "@/lib/zones/format";
 import { getZone } from "@/lib/zones/queries";
 
 export async function generateMetadata({ params }: PageProps<"/zones/[id]">): Promise<Metadata> {
@@ -25,8 +25,11 @@ export default async function ZonePage({ params, searchParams }: PageProps<"/zon
     notFound();
   }
 
-  const filters = parseEventFilters(await searchParams);
+  const query = await searchParams;
+  const filters = parseEventFilters(query);
   const result = await listEvents(filters, { zoneId: zone.id });
+  // Set when coming from an alert. An unknown id selects nothing.
+  const selectedEventId = typeof query.event === "string" ? query.event : null;
 
   return (
     <div className="flex h-dvh flex-col">
@@ -40,13 +43,20 @@ export default async function ZonePage({ params, searchParams }: PageProps<"/zon
               Watch zones
             </Link>
             <h1 className="truncate text-lg font-semibold">{zone.name}</h1>
-            <p className="text-muted text-xs">{describeZoneArea(zone)}</p>
+            <p className="text-muted text-xs">
+              {describeZoneArea(zone)} · {describeAlertThreshold(zone.alertMinSeverity)}
+            </p>
           </div>
           <Link href={`/zones/${zone.id}/edit`} className={buttonClassName("ghost", "shrink-0")}>
             Edit
           </Link>
         </div>
-        <MapExplorer {...result} filters={filters} zone={zone} />
+        <MapExplorer
+          {...result}
+          filters={filters}
+          zone={zone}
+          initialSelectedId={selectedEventId}
+        />
       </main>
     </div>
   );

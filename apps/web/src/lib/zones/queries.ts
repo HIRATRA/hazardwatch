@@ -5,39 +5,31 @@ import {
   asc,
   count,
   eq,
+  eventInZone,
   gte,
   hazardEvents,
   sql,
   watchZones,
   type HazardSeverity,
-  type SQL,
   type WatchZone,
 } from "@hazardwatch/db";
 import { cache } from "react";
 
 import { db } from "@/lib/db";
 import { windowStart, type TimeWindow } from "@/lib/events/filters";
+import { isUuid } from "@/lib/uuid";
 
-import { isZoneId } from "./input";
 import type { Zone, ZoneSummary } from "./types";
 
 /** Period over which the zone list counts events. */
 export const RECENT_WINDOW: TimeWindow = "7d";
-
-/**
- * Matches the events located within a watch zone, for queries that involve
- * both tables. Distances are measured on the geography type, which the
- * hazard_events_location_geography_idx index serves.
- */
-export function eventInZone(): SQL {
-  return sql`ST_DWithin(${hazardEvents.location}::geography, ${watchZones.center}::geography, ${watchZones.radiusKm} * 1000)`;
-}
 
 const zoneColumns = {
   id: watchZones.id,
   name: watchZones.name,
   center: watchZones.center,
   radiusKm: watchZones.radiusKm,
+  alertMinSeverity: watchZones.alertMinSeverity,
 };
 
 function toZone({ center, ...zone }: Pick<WatchZone, keyof typeof zoneColumns>): Zone {
@@ -78,7 +70,7 @@ export async function listZones(userId: string, now = new Date()): Promise<ZoneS
  */
 export const getZone = cache(async (userId: string, id: string): Promise<Zone | null> => {
   // PostgreSQL rejects malformed identifiers instead of matching nothing.
-  if (!isZoneId(id)) {
+  if (!isUuid(id)) {
     return null;
   }
   const [row] = await db

@@ -5,8 +5,8 @@ import { redirect } from "next/navigation";
 
 import { db } from "@/lib/db";
 import { requireSession } from "@/lib/session";
+import { isUuid } from "@/lib/uuid";
 import {
-  isZoneId,
   MAX_ZONES_PER_USER,
   parseZoneInput,
   type ZoneFormErrors,
@@ -19,8 +19,8 @@ export interface ZoneFormState {
   errors: ZoneFormErrors & { form?: string };
 }
 
-function toRow({ name, longitude, latitude, radiusKm }: ZoneInput) {
-  return { name, radiusKm, center: { x: longitude, y: latitude } };
+function toRow({ name, longitude, latitude, radiusKm, alertMinSeverity }: ZoneInput) {
+  return { name, radiusKm, alertMinSeverity, center: { x: longitude, y: latitude } };
 }
 
 export async function createZone(_state: ZoneFormState, form: FormData): Promise<ZoneFormState> {
@@ -58,7 +58,7 @@ export async function updateZone(
     return { errors: input.errors };
   }
 
-  const updated = isZoneId(id)
+  const updated = isUuid(id)
     ? await db
         .update(watchZones)
         .set(toRow(input.data))
@@ -73,7 +73,7 @@ export async function updateZone(
 
 export async function deleteZone(id: string): Promise<void> {
   const { user } = await requireSession();
-  if (isZoneId(id)) {
+  if (isUuid(id)) {
     await db.delete(watchZones).where(and(eq(watchZones.id, id), eq(watchZones.userId, user.id)));
   }
   redirect("/zones");

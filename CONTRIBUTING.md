@@ -79,8 +79,14 @@ Each commit should build, pass lint and leave the test suite green.
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm test:integration
 pnpm build
 ```
+
+Integration tests run against PostgreSQL, so start the database with
+`docker compose up -d` first. Each run creates a temporary database on the
+server that `DATABASE_URL` points to and drops it afterwards, leaving your
+development data untouched. Name these tests `*.integration.test.ts`.
 
 Fill in the pull request template, link the related issue and describe how
 the change was tested. Pull requests are squash-merged or merged with a

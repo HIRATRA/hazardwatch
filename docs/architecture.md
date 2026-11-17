@@ -32,12 +32,14 @@ flowchart LR
         events[("hazard_events")]
         runs[("ingestion_runs")]
         zones[("watch_zones")]
+        alerts[("zone_alerts")]
         authTables[("user, session,<br/>account, verification")]
     end
 
     feeds -- "HTTP polling" --> adapters
     repository --> events
     repository --> runs
+    repository -- "matches zones" --> alerts
     browser --> pages
     browser --> actions
     browser --> authApi
@@ -45,7 +47,9 @@ flowchart LR
     pages --> events
     pages --> runs
     pages --> zones
+    pages --> alerts
     actions --> zones
+    actions --> alerts
     authApi --> authTables
 ```
 
@@ -92,6 +96,10 @@ only integration point between the web app and the worker.
   are created, edited and deleted through server actions, which check the
   session, validate the input with zod and only ever touch the signed-in
   user's zones.
+- **Alerts.** `/alerts` lists the alerts raised for the user's zones, and
+  the header shows how many are unread. Opening an alert goes through a
+  server action that marks it as read, then shows the event on its zone's
+  map. A plain link would be prefetched and mark alerts as read on its own.
 - **Code shared with the browser.** Client components import domain values
   from `@hazardwatch/db/constants`, a dependency-free entry point. The main
   entry point pulls in Drizzle and the PostgreSQL driver and is reserved
@@ -117,6 +125,12 @@ only integration point between the web app and the worker.
   `(source, external_id)`. Fetching the same feed twice is a no-op, and
   events revised upstream are updated in place. When a source reports a
   revision time, unchanged events are not rewritten at all.
+- **Alerts.** In the transaction that writes a batch, the events inserted
+  or revised are matched against every watch zone, and an alert is
+  recorded for each zone an event reaches at or above the zone's threshold
+  (see [ADR 0008](adr/0008-raise-alerts-when-events-are-written.md)).
+  Alerts are raised once per zone and event, and again when the event
+  grows more severe. Events that ended more than a day ago raise none.
 - **Lifecycle.** `SIGINT` and `SIGTERM` abort pending waits and close the
   connection pool, which keeps restarts and deployments clean.
 
@@ -178,7 +192,12 @@ as PAGER:
   and committed alongside the schema change. They are applied explicitly
   with `pnpm db:migrate`, never implicitly when an application starts.
 - **Shared runtime.** The package re-exports the Drizzle query helpers it
-  uses so that every application resolves a single `drizzle-orm` instance.
+  uses so that every application resolves a single `drizzle-orm` instance,
+  along with conditions both applications rely on, such as the one that
+  matches events to watch zones.
+- **Testing.** `@hazardwatch/db/testing` creates a temporary, migrated
+  database for integration tests and drops it afterwards. Run them with
+  `pnpm test:integration` while the database container is up.
 
 ## Data model
 
@@ -187,6 +206,7 @@ as PAGER:
 | `hazard_events`                              | Normalised events from every source, one per upstream event |
 | `ingestion_runs`                             | Audit trail of each polling pass, used for monitoring       |
 | `watch_zones`                                | Areas watched by each user, as a centre and a radius        |
+| `zone_alerts`                                | Events that reached a zone, one per zone and event          |
 | `user`, `session`, `account`, `verification` | Better Auth accounts and sessions                           |
 
 `hazard_events` stores its position as a PostGIS `geometry(Point, 4326)`
@@ -207,6 +227,12 @@ measured on the Earth's surface, and a GiST index on the event location
 cast to geography keeps these queries fast. Zones are deleted along with
 their owner's account.
 
+Each zone has an alert threshold, `alert_min_severity`, which is null when
+the user wants no alerts. An alert keeps the severity it was last raised
+with, so that only a more severe revision raises it again, and `read_at`
+records when the user read it. Alerts are deleted with their zone or their
+event.
+
 ## Ingestion flow
 
 ```mermaid
@@ -223,6 +249,7 @@ sequenceDiagram
         F-->>A: payload
         A-->>S: normalised events
         S->>D: upsert hazard_events on (source, external_id)
+        S->>D: insert zone_alerts for the zones the changed events reach
         S->>D: update ingestion_runs (succeeded or failed)
     end
 ```
@@ -258,5 +285,6 @@ platform.
 The following parts are planned and not built yet:
 
 - A source adapter for NASA FIRMS satellite fire detections.
-- Alerts sent when a new event reaches a watch zone.
+- Alerts delivered by email, so that users learn about them away from the
+  application.
 - An assistant that summarises the situation around a place or an event.

@@ -1,4 +1,4 @@
-import { maxZoneRadiusKm, minZoneRadiusKm } from "@hazardwatch/db/constants";
+import { hazardSeverities, maxZoneRadiusKm, minZoneRadiusKm } from "@hazardwatch/db/constants";
 import { z } from "zod";
 
 import { getText } from "@/lib/form";
@@ -12,8 +12,15 @@ export const MAX_ZONE_NAME_LENGTH = 60;
 /** Zones a single account may watch, which keeps matching events against them cheap. */
 export const MAX_ZONES_PER_USER = 20;
 
+/** Value of the alert threshold field when the user wants no alerts for a zone. */
+export const ALERTS_OFF = "off";
+
+/** Values of the alert threshold field: a minimum severity, or no alerts. */
+export const alertThresholdChoices = [...hazardSeverities, ALERTS_OFF] as const;
+
 const centerError = "Pick the centre of the zone on the map.";
 const radiusError = `Choose a radius between ${minZoneRadiusKm} and ${maxZoneRadiusKm} km.`;
+const alertError = "Choose which events to be alerted about.";
 
 const zoneInputSchema = z.object({
   name: z
@@ -28,6 +35,9 @@ const zoneInputSchema = z.object({
     .int(radiusError)
     .min(minZoneRadiusKm, radiusError)
     .max(maxZoneRadiusKm, radiusError),
+  alertMinSeverity: z
+    .enum(alertThresholdChoices, { error: alertError })
+    .transform((value) => (value === ALERTS_OFF ? null : value)),
 });
 
 export type ZoneInput = z.infer<typeof zoneInputSchema>;
@@ -37,6 +47,7 @@ export interface ZoneFormErrors {
   name?: string;
   center?: string;
   radiusKm?: string;
+  alertMinSeverity?: string;
 }
 
 export type ZoneInputResult =
@@ -49,6 +60,7 @@ export function parseZoneInput(form: FormData): ZoneInputResult {
     longitude: toNumber(getText(form, "longitude")),
     latitude: toNumber(getText(form, "latitude")),
     radiusKm: toNumber(getText(form, "radiusKm")),
+    alertMinSeverity: getText(form, "alertMinSeverity"),
   });
   if (result.success) {
     return { success: true, data: result.data };
@@ -61,13 +73,9 @@ export function parseZoneInput(form: FormData): ZoneInputResult {
       name: fieldErrors.name?.[0],
       center: (fieldErrors.longitude ?? fieldErrors.latitude)?.[0],
       radiusKm: fieldErrors.radiusKm?.[0],
+      alertMinSeverity: fieldErrors.alertMinSeverity?.[0],
     },
   };
-}
-
-/** Whether a value has the shape of a zone identifier. */
-export function isZoneId(value: string): boolean {
-  return z.uuid().safeParse(value).success;
 }
 
 /** `Number("")` is 0, which would place a missing centre on the equator. */

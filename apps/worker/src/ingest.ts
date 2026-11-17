@@ -24,10 +24,16 @@ export async function ingestSource(
   let result: RunResult;
   try {
     const events = await source.fetchEvents({ signal, logger: log });
-    const eventsUpserted = await repository.upsertEvents(events);
+    const { eventsUpserted, alertsRaised } = await repository.upsertEvents(events);
     result = { status: "succeeded", eventsUpserted };
     log.info(
-      { runId, fetched: events.length, eventsUpserted, durationMs: elapsed(startedAt) },
+      {
+        runId,
+        fetched: events.length,
+        eventsUpserted,
+        alertsRaised,
+        durationMs: elapsed(startedAt),
+      },
       "ingestion succeeded",
     );
   } catch (error) {

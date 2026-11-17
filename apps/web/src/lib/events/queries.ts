@@ -1,9 +1,17 @@
 import "server-only";
 
-import { and, desc, eq, gte, hazardEvents, inArray, watchZones } from "@hazardwatch/db";
+import {
+  and,
+  desc,
+  eq,
+  eventInZone,
+  gte,
+  hazardEvents,
+  inArray,
+  watchZones,
+} from "@hazardwatch/db";
 
 import { db } from "@/lib/db";
-import { eventInZone } from "@/lib/zones/queries";
 
 import { severitiesAtLeast, windowStart, type EventFilters } from "./filters";
 import type { MapEvent } from "./types";

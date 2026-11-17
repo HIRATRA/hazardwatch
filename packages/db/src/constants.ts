@@ -26,6 +26,12 @@ export const ingestionStatuses = ["running", "succeeded", "failed"] as const;
 export const minZoneRadiusKm = 1;
 export const maxZoneRadiusKm = 1000;
 
+/**
+ * Alert threshold of a new watch zone. Minor events, such as small
+ * earthquakes, happen many times a day and would drown the others.
+ */
+export const defaultAlertMinSeverity: HazardSeverity = "moderate";
+
 export type HazardSource = (typeof hazardSources)[number];
 export type HazardKind = (typeof hazardKinds)[number];
 export type HazardSeverity = (typeof hazardSeverities)[number];
