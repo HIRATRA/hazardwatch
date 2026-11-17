@@ -27,3 +27,35 @@ const utcFormat = new Intl.DateTimeFormat("en", {
 export function formatUtc(date: Date): string {
   return `${utcFormat.format(date)} UTC`;
 }
+
+const dayFormat = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  timeZone: "UTC",
+});
+
+const dayWithYearFormat = new Intl.DateTimeFormat("en", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+/**
+ * Describes a period by its days in UTC: "Oct 24 – Nov 18", or a single day.
+ * Years are shown only when the period does not fall entirely within the
+ * current year.
+ *
+ * Both ends are formatted separately: `formatRange` spaces the dash
+ * differently in Node.js and in browsers, which would break hydration.
+ */
+export function formatPeriod(start: Date, end: Date, now: Date): string {
+  const year = now.getUTCFullYear();
+  const format =
+    start.getUTCFullYear() === year && end.getUTCFullYear() === year
+      ? dayFormat
+      : dayWithYearFormat;
+  const from = format.format(start);
+  const to = format.format(end);
+  return from === to ? from : `${from} – ${to}`;
+}

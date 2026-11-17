@@ -2,10 +2,10 @@
 
 import { useEffect, useRef } from "react";
 
-import { RelativeTime } from "@/components/ui/relative-time";
 import { hazardSeverityLabels } from "@/lib/events/format";
 import type { MapEvent } from "@/lib/events/types";
 
+import { EventTime } from "./event-time";
 import { SeverityDot } from "./severity";
 
 const countFormat = new Intl.NumberFormat("en");
@@ -31,7 +31,7 @@ export function EventList({ events, truncated, now, selectedId, onSelect }: Even
     <div className="flex min-h-0 flex-1 flex-col">
       <p className="text-muted px-4 py-2 text-xs" aria-live="polite">
         {countFormat.format(events.length)} {events.length === 1 ? "event" : "events"}
-        {truncated && ", most recent shown"}
+        {truncated && ", most recently active shown"}
       </p>
 
       {events.length === 0 ? (
@@ -53,8 +53,7 @@ export function EventList({ events, truncated, now, selectedId, onSelect }: Even
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm">{event.title}</span>
                     <span className="text-muted text-xs">
-                      <RelativeTime date={event.occurredAt} now={now} /> ·{" "}
-                      {hazardSeverityLabels[event.severity]}
+                      <EventTime event={event} now={now} /> · {hazardSeverityLabels[event.severity]}
                     </span>
                   </span>
                 </button>

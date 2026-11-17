@@ -87,6 +87,7 @@ describe("toIngestedEvent", () => {
         network: "us",
       },
       occurredAt: new Date(1_794_845_805_265),
+      activeUntil: new Date(1_794_845_805_265),
       sourceUpdatedAt: new Date(1_794_847_249_824),
     });
   });

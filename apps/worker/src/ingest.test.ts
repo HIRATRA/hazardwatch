@@ -15,6 +15,7 @@ const event: IngestedEvent = {
   title: "M 5.1 - 10 km S of Somewhere",
   location: { x: 23.32, y: 42.69 },
   occurredAt: new Date("2026-01-01T00:00:00Z"),
+  activeUntil: new Date("2026-01-01T00:00:00Z"),
 };
 
 function createFakeRepository() {

@@ -34,7 +34,15 @@ export const hazardEvents = pgTable(
     url: text("url"),
     location: geometry("location", { type: "point", mode: "xy", srid: 4326 }).notNull(),
     properties: jsonb("properties").$type<Record<string, unknown>>().notNull().default({}),
+    /** When the event started. */
     occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+    /**
+     * End of the period during which the event is active, as last reported by
+     * the source. Equal to `occurredAt` for instantaneous events such as
+     * earthquakes. It moves forward while an event goes on, and may lie in the
+     * future when the source reports a forecast.
+     */
+    activeUntil: timestamp("active_until", { withTimezone: true }).notNull(),
     sourceUpdatedAt: timestamp("source_updated_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
@@ -45,7 +53,7 @@ export const hazardEvents = pgTable(
   (t) => [
     uniqueIndex("hazard_events_source_external_id_idx").on(t.source, t.externalId),
     index("hazard_events_location_idx").using("gist", t.location),
-    index("hazard_events_occurred_at_idx").on(t.occurredAt.desc()),
+    index("hazard_events_active_until_idx").on(t.activeUntil.desc()),
     index("hazard_events_kind_idx").on(t.kind),
   ],
 );

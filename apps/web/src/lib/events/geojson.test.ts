@@ -11,6 +11,7 @@ const event: MapEvent = {
   title: "M 5.4 - 95 km WSW of Changuillo, Peru",
   url: "https://earthquake.usgs.gov/earthquakes/eventpage/us7000tykh",
   occurredAt: "2026-11-16T16:16:45.265Z",
+  activeUntil: "2026-11-16T16:16:45.265Z",
   longitude: -76.0259,
   latitude: -15.0306,
 };
