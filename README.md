@@ -17,7 +17,8 @@ interactive map, and alerts you when an event hits an area you care about.
 | NASA FIRMS satellite fire detections                             | Planned |
 | Interactive map with filters                                     | Done    |
 | Watch zones                                                      | Done    |
-| Alerts when an event reaches a watch zone                        | Planned |
+| Alerts when an event reaches a watch zone                        | Done    |
+| Alerts delivered by email                                        | Planned |
 | Assistant that summarises the situation nearby                   | Planned |
 
 ## Tech stack
