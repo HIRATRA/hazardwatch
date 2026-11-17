@@ -18,7 +18,7 @@ interactive map, and alerts you when an event hits an area you care about.
 | Interactive map with filters                                     | Done    |
 | Watch zones                                                      | Done    |
 | Alerts when an event reaches a watch zone                        | Done    |
-| Alerts delivered by email                                        | Planned |
+| Alerts delivered by email                                        | Done    |
 | Assistant that summarises the situation nearby                   | Planned |
 
 ## Tech stack
