@@ -1,28 +1,18 @@
 "use client";
 
-import "maplibre-gl/dist/maplibre-gl.css";
-
-import {
+import type {
+  ExpressionSpecification,
+  FilterSpecification,
+  GeoJSONSource,
   Map as MapLibreMap,
-  NavigationControl,
-  setWorkerUrl,
-  type ExpressionSpecification,
-  type FilterSpecification,
-  type GeoJSONSource,
 } from "maplibre-gl";
 import { useEffect, useMemo, useRef } from "react";
 
 import { toFeatureCollection } from "@/lib/events/geojson";
 import type { MapEvent } from "@/lib/events/types";
 
+import { createMap } from "./maplibre";
 import { severityStyles } from "./severity";
-
-// MapLibre 6 parses tiles in a separate worker module. Referencing it through
-// `new URL(…, import.meta.url)` lets the bundler emit and serve it as an asset.
-setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).toString());
-
-/** Free OpenStreetMap vector tiles, no API key required. */
-const STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
 
 const SOURCE_ID = "events";
 const EVENTS_LAYER_ID = "events";
@@ -88,15 +78,8 @@ export function HazardMap({ events, selectedId, onSelect }: HazardMapProps) {
       return;
     }
 
-    const map = new MapLibreMap({
-      container,
-      style: STYLE_URL,
-      center: [10, 20],
-      zoom: 1.3,
-      attributionControl: { compact: true },
-    });
+    const map = createMap(container);
     mapRef.current = map;
-    map.addControl(new NavigationControl({ showCompass: false }), "top-right");
 
     map.on("load", () => {
       map.addSource(SOURCE_ID, { type: "geojson", data: latest.current.data });
