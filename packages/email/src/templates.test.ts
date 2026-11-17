@@ -73,6 +73,22 @@ describe("alertDigest", () => {
     }
   });
 
+  it("lists the first ten alerts and counts the others", () => {
+    const alerts = Array.from({ length: 12 }, (_, index) => ({
+      ...lisbon,
+      eventTitle: `Event ${index + 1}`,
+    }));
+
+    const { subject, text, html } = alertDigest({ ...links, alerts });
+
+    expect(subject).toBe("12 new alerts in your watch zones");
+    expect(text).toContain("Event 10");
+    expect(text).not.toContain("Event 11");
+    expect(text).toContain("And 2 more alerts.");
+    expect(html).toContain("And 2 more alerts.");
+    expect(html).not.toContain("Event 11");
+  });
+
   it("escapes names and titles in HTML", () => {
     const { html } = alertDigest({
       ...links,

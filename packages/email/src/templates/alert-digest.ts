@@ -17,6 +17,9 @@ const severityColors: Record<HazardSeverity, string> = {
   extreme: "#a21caf",
 };
 
+/** Alerts listed in one email. The others are counted, and listed in the app. */
+const MAX_LISTED_ALERTS = 10;
+
 export interface AlertSummary {
   eventTitle: string;
   /** Severity of the event when the alert was raised. */
@@ -48,25 +51,28 @@ export function alertDigest({ name, alerts, alertsUrl, zonesUrl }: AlertDigestCo
       ? "An event reached one of your watch zones."
       : `${alerts.length} events reached your watch zones.`;
   const footer = "You receive these emails because email alerts are on for these zones.";
+  const listed = alerts.slice(0, MAX_LISTED_ALERTS);
+  const unlisted = alerts.length - listed.length;
+  const more = unlisted === 1 ? "And 1 more alert." : `And ${unlisted} more alerts.`;
 
   const text = `Hi ${name},
 
 ${intro}
 
-${alerts
+${listed
   .map(
     (alert) =>
       `- ${severityLabels[alert.severity]}: ${alert.eventTitle}
   In ${alert.zoneName}. ${alert.url}`,
   )
   .join("\n")}
-
+${unlisted > 0 ? `\n${more}\n` : ""}
 See all your alerts: ${alertsUrl}
 
 ${footer} Turn them off for any zone: ${zonesUrl}
 `;
 
-  const items = alerts
+  const items = listed
     .map(
       (alert) => `<li style="margin:0 0 16px;line-height:1.4;">
           <span style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:${severityColors[alert.severity]};">${severityLabels[alert.severity]}</span><br>
@@ -82,6 +88,7 @@ ${footer} Turn them off for any zone: ${zonesUrl}
       <ul style="margin:0;padding:0;list-style:none;">
         ${items}
       </ul>
+      ${unlisted > 0 ? `<p style="margin:0;line-height:1.5;">${more}</p>` : ""}
       ${renderButton("See all your alerts", alertsUrl)}`,
     footerHtml: `${footer} <a href="${escapeHtml(zonesUrl)}" style="color:#6b7280;">Turn them off for any zone</a>.`,
   });
