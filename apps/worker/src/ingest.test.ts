@@ -20,7 +20,9 @@ const event: IngestedEvent = {
 
 function createFakeRepository() {
   const finished: RunResult[] = [];
-  const upsertEvents = vi.fn((events: readonly IngestedEvent[]) => Promise.resolve(events.length));
+  const upsertEvents = vi.fn((events: readonly IngestedEvent[]) =>
+    Promise.resolve({ eventsUpserted: events.length, alertsRaised: 0 }),
+  );
   const repository: IngestionRepository = {
     startRun: vi.fn(() => Promise.resolve("run-1")),
     finishRun: vi.fn((_runId: string, result: RunResult) => {

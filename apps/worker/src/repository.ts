@@ -1,8 +1,14 @@
 import {
+  and,
   eq,
+  eventInZone,
+  gte,
   hazardEvents,
+  inArray,
   ingestionRuns,
   sql,
+  watchZones,
+  zoneAlerts,
   type Database,
   type HazardSource,
 } from "@hazardwatch/db";
@@ -11,18 +17,37 @@ import type { IngestedEvent } from "./sources/index.js";
 
 const UPSERT_BATCH_SIZE = 500;
 
+/**
+ * How long after it ends an event can still raise alerts. Sources keep
+ * revising old events, and an alert about a cyclone that faded weeks ago
+ * would only be noise.
+ */
+const ALERT_GRACE_PERIOD = sql`interval '1 day'`;
+
+type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
+
 export interface RunResult {
   status: "succeeded" | "failed";
   eventsUpserted: number;
   error?: string;
 }
 
+export interface UpsertResult {
+  /** Events inserted or updated. */
+  eventsUpserted: number;
+  /** Alerts raised, or raised again, for the watch zones those events reach. */
+  alertsRaised: number;
+}
+
 /** Persistence operations the ingestion pipeline depends on. */
 export interface IngestionRepository {
   startRun(source: HazardSource): Promise<string>;
   finishRun(runId: string, result: RunResult): Promise<void>;
-  /** Inserts new events and updates revised ones. Resolves to how many rows were written. */
-  upsertEvents(events: readonly IngestedEvent[]): Promise<number>;
+  /**
+   * Inserts new events and updates revised ones, then raises alerts for the
+   * watch zones they reach, in the same transaction so that no alert is lost.
+   */
+  upsertEvents(events: readonly IngestedEvent[]): Promise<UpsertResult>;
 }
 
 export function createIngestionRepository(db: Database): IngestionRepository {
@@ -51,35 +76,92 @@ export function createIngestionRepository(db: Database): IngestionRepository {
     },
 
     async upsertEvents(events) {
-      let upserted = 0;
+      const total: UpsertResult = { eventsUpserted: 0, alertsRaised: 0 };
       for (let start = 0; start < events.length; start += UPSERT_BATCH_SIZE) {
         const batch = events.slice(start, start + UPSERT_BATCH_SIZE);
-        const rows = await db
-          .insert(hazardEvents)
-          .values(batch)
-          .onConflictDoUpdate({
-            target: [hazardEvents.source, hazardEvents.externalId],
-            set: {
-              kind: sql`excluded.kind`,
-              severity: sql`excluded.severity`,
-              title: sql`excluded.title`,
-              url: sql`excluded.url`,
-              location: sql`excluded.location`,
-              properties: sql`excluded.properties`,
-              occurredAt: sql`excluded.occurred_at`,
-              activeUntil: sql`excluded.active_until`,
-              sourceUpdatedAt: sql`excluded.source_updated_at`,
-              updatedAt: sql`now()`,
-            },
-            // Feeds are polled far more often than events change. When the source
-            // reports a revision time, rewrite the row only if it moved on.
-            setWhere: sql`excluded.source_updated_at is null
-              or excluded.source_updated_at is distinct from ${hazardEvents.sourceUpdatedAt}`,
-          })
-          .returning({ id: hazardEvents.id });
-        upserted += rows.length;
+        const result = await db.transaction(async (tx) => {
+          const eventIds = await writeEvents(tx, batch);
+          return { eventsUpserted: eventIds.length, alertsRaised: await raiseAlerts(tx, eventIds) };
+        });
+        total.eventsUpserted += result.eventsUpserted;
+        total.alertsRaised += result.alertsRaised;
       }
-      return upserted;
+      return total;
     },
   };
+}
+
+/** Upserts a batch of events and resolves to the ids of the rows written. */
+async function writeEvents(tx: Transaction, events: readonly IngestedEvent[]): Promise<string[]> {
+  const rows = await tx
+    .insert(hazardEvents)
+    .values([...events])
+    .onConflictDoUpdate({
+      target: [hazardEvents.source, hazardEvents.externalId],
+      set: {
+        kind: sql`excluded.kind`,
+        severity: sql`excluded.severity`,
+        title: sql`excluded.title`,
+        url: sql`excluded.url`,
+        location: sql`excluded.location`,
+        properties: sql`excluded.properties`,
+        occurredAt: sql`excluded.occurred_at`,
+        activeUntil: sql`excluded.active_until`,
+        sourceUpdatedAt: sql`excluded.source_updated_at`,
+        updatedAt: sql`now()`,
+      },
+      // Feeds are polled far more often than events change. When the source
+      // reports a revision time, rewrite the row only if it moved on.
+      setWhere: sql`excluded.source_updated_at is null
+        or excluded.source_updated_at is distinct from ${hazardEvents.sourceUpdatedAt}`,
+    })
+    .returning({ id: hazardEvents.id });
+  return rows.map((row) => row.id);
+}
+
+/**
+ * Raises an alert for every watch zone that one of the given events reaches
+ * at or above the zone's threshold, as long as the event is still going on
+ * or ended recently. An alert is raised once per zone and event, and again,
+ * unread, if the event becomes more severe. Resolves to the number of alerts
+ * raised.
+ */
+async function raiseAlerts(tx: Transaction, eventIds: readonly string[]): Promise<number> {
+  if (eventIds.length === 0) {
+    return 0;
+  }
+
+  // Drizzle inserts from a select only when it lists every column of the
+  // table, in order, so the defaults are spelled out.
+  const reached = tx
+    .select({
+      id: sql<string>`gen_random_uuid()`.as("id"),
+      zoneId: watchZones.id,
+      eventId: hazardEvents.id,
+      severity: hazardEvents.severity,
+      raisedAt: sql<Date>`now()`.as("raised_at"),
+      readAt: sql<Date | null>`null`.as("read_at"),
+    })
+    .from(hazardEvents)
+    .innerJoin(watchZones, eventInZone())
+    .where(
+      and(
+        inArray(hazardEvents.id, [...eventIds]),
+        // PostgreSQL orders enum values as declared, and a zone without a
+        // threshold compares as null, which never matches.
+        gte(hazardEvents.severity, watchZones.alertMinSeverity),
+        gte(hazardEvents.activeUntil, sql`now() - ${ALERT_GRACE_PERIOD}`),
+      ),
+    );
+
+  const raised = await tx
+    .insert(zoneAlerts)
+    .select(reached)
+    .onConflictDoUpdate({
+      target: [zoneAlerts.zoneId, zoneAlerts.eventId],
+      set: { severity: sql`excluded.severity`, raisedAt: sql`now()`, readAt: null },
+      setWhere: sql`excluded.severity > ${zoneAlerts.severity}`,
+    })
+    .returning({ id: zoneAlerts.id });
+  return raised.length;
 }
