@@ -16,7 +16,8 @@ interactive map, and alerts you when an event hits an area you care about.
 | GDACS alerts for cyclones, floods, volcanoes, droughts and fires | Done    |
 | NASA FIRMS satellite fire detections                             | Planned |
 | Interactive map with filters                                     | Done    |
-| Watch zones and alerts                                           | Planned |
+| Watch zones                                                      | Done    |
+| Alerts when an event reaches a watch zone                        | Planned |
 | Assistant that summarises the situation nearby                   | Planned |
 
 ## Tech stack

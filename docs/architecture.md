@@ -23,6 +23,7 @@ flowchart LR
 
     subgraph web ["apps/web (Next.js)"]
         pages["Server components"]
+        actions["Server actions"]
         authApi["/api/auth/*<br/>Better Auth"]
         health["/api/health"]
     end
@@ -30,6 +31,7 @@ flowchart LR
     subgraph database ["PostgreSQL + PostGIS"]
         events[("hazard_events")]
         runs[("ingestion_runs")]
+        zones[("watch_zones")]
         authTables[("user, session,<br/>account, verification")]
     end
 
@@ -37,10 +39,13 @@ flowchart LR
     repository --> events
     repository --> runs
     browser --> pages
+    browser --> actions
     browser --> authApi
     browser -- "basemap" --> tiles
     pages --> events
     pages --> runs
+    pages --> zones
+    actions --> zones
     authApi --> authTables
 ```
 
@@ -80,6 +85,13 @@ only integration point between the web app and the worker.
   `router.refresh()` every minute while visible. Both re-render on the
   server and keep client state such as the map position and the selected
   event.
+- **Watch zones.** Signed-in users manage the circles they watch from
+  `/zones` (see [ADR 0007](adr/0007-define-watch-zones-as-circles-on-the-earths-surface.md)).
+  The list sums up the past 7 days for each zone, and each zone has a page
+  that reuses the live map, limited to the events located within it. Zones
+  are created, edited and deleted through server actions, which check the
+  session, validate the input with zod and only ever touch the signed-in
+  user's zones.
 - **Code shared with the browser.** Client components import domain values
   from `@hazardwatch/db/constants`, a dependency-free entry point. The main
   entry point pulls in Drizzle and the PostgreSQL driver and is reserved
@@ -174,6 +186,7 @@ as PAGER:
 | -------------------------------------------- | ----------------------------------------------------------- |
 | `hazard_events`                              | Normalised events from every source, one per upstream event |
 | `ingestion_runs`                             | Audit trail of each polling pass, used for monitoring       |
+| `watch_zones`                                | Areas watched by each user, as a centre and a radius        |
 | `user`, `session`, `account`, `verification` | Better Auth accounts and sessions                           |
 
 `hazard_events` stores its position as a PostGIS `geometry(Point, 4326)`
@@ -187,6 +200,12 @@ equal for instantaneous events such as earthquakes, while lasting events
 such as floods extend `active_until` with every update. Time windows match
 events on `active_until`, so an event that started long ago but is still
 going on is included (see [ADR 0006](adr/0006-model-hazard-events-as-activity-periods.md)).
+
+A watch zone covers every point within `radius_km` of its `center`. Events
+are matched with `ST_DWithin` on the geography type, so that distances are
+measured on the Earth's surface, and a GiST index on the event location
+cast to geography keeps these queries fast. Zones are deleted along with
+their owner's account.
 
 ## Ingestion flow
 
@@ -239,7 +258,5 @@ platform.
 The following parts are planned and not built yet:
 
 - A source adapter for NASA FIRMS satellite fire detections.
-- Watch zones: user-defined areas matched against new events with PostGIS
-  spatial queries.
-- Alerts sent when an event affects a watch zone.
+- Alerts sent when a new event reaches a watch zone.
 - An assistant that summarises the situation around a place or an event.
