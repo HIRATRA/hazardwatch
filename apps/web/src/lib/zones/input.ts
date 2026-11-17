@@ -78,11 +78,6 @@ export function parseZoneInput(form: FormData): ZoneInputResult {
   };
 }
 
-/** Whether a value has the shape of a zone identifier. */
-export function isZoneId(value: string): boolean {
-  return z.uuid().safeParse(value).success;
-}
-
 /** `Number("")` is 0, which would place a missing centre on the equator. */
 function toNumber(text: string): number {
   return text === "" ? Number.NaN : Number(text);

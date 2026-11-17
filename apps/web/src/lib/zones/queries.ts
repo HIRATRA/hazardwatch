@@ -17,8 +17,8 @@ import { cache } from "react";
 
 import { db } from "@/lib/db";
 import { windowStart, type TimeWindow } from "@/lib/events/filters";
+import { isUuid } from "@/lib/uuid";
 
-import { isZoneId } from "./input";
 import type { Zone, ZoneSummary } from "./types";
 
 /** Period over which the zone list counts events. */
@@ -70,7 +70,7 @@ export async function listZones(userId: string, now = new Date()): Promise<ZoneS
  */
 export const getZone = cache(async (userId: string, id: string): Promise<Zone | null> => {
   // PostgreSQL rejects malformed identifiers instead of matching nothing.
-  if (!isZoneId(id)) {
+  if (!isUuid(id)) {
     return null;
   }
   const [row] = await db
