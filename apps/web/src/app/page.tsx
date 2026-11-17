@@ -9,7 +9,7 @@ const features = [
   },
   {
     title: "Watch zones",
-    body: "Draw the areas that matter to you: sites, cities, supply routes, client portfolios.",
+    body: "Pick the places that matter to you, such as sites, cities or suppliers, and follow the hazards around them.",
   },
   {
     title: "Instant alerts",
