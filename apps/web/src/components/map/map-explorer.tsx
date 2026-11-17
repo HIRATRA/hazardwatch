@@ -27,11 +27,20 @@ interface MapExplorerProps extends EventsResult {
   filters: EventFilters;
   /** Watch zone the events were selected from, outlined on the map. */
   zone?: ZoneShape;
+  /** Event to select when the page opens, such as the one an alert is about. */
+  initialSelectedId?: string | null;
 }
 
 /** Event list, filters and map, kept in sync through the selected event. */
-export function MapExplorer({ events, truncated, generatedAt, filters, zone }: MapExplorerProps) {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+export function MapExplorer({
+  events,
+  truncated,
+  generatedAt,
+  filters,
+  zone,
+  initialSelectedId = null,
+}: MapExplorerProps) {
+  const [selectedId, setSelectedId] = useState(initialSelectedId);
   const clearSelection = useCallback(() => setSelectedId(null), []);
   useAutoRefresh(REFRESH_INTERVAL_MS);
 

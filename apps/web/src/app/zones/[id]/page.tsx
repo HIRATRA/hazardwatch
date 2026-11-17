@@ -25,8 +25,11 @@ export default async function ZonePage({ params, searchParams }: PageProps<"/zon
     notFound();
   }
 
-  const filters = parseEventFilters(await searchParams);
+  const query = await searchParams;
+  const filters = parseEventFilters(query);
   const result = await listEvents(filters, { zoneId: zone.id });
+  // Set when coming from an alert. An unknown id selects nothing.
+  const selectedEventId = typeof query.event === "string" ? query.event : null;
 
   return (
     <div className="flex h-dvh flex-col">
@@ -48,7 +51,12 @@ export default async function ZonePage({ params, searchParams }: PageProps<"/zon
             Edit
           </Link>
         </div>
-        <MapExplorer {...result} filters={filters} zone={zone} />
+        <MapExplorer
+          {...result}
+          filters={filters}
+          zone={zone}
+          initialSelectedId={selectedEventId}
+        />
       </main>
     </div>
   );
