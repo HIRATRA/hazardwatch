@@ -53,11 +53,12 @@ flowchart LR
     authApi --> authTables
 ```
 
-| Package       | Responsibility                                                 |
-| ------------- | -------------------------------------------------------------- |
-| `apps/web`    | User-facing application: pages, authentication, HTTP endpoints |
-| `apps/worker` | Long-running process that polls hazard feeds and stores events |
-| `packages/db` | Database schema, client factory, migrations and shared types   |
+| Package          | Responsibility                                                 |
+| ---------------- | -------------------------------------------------------------- |
+| `apps/web`       | User-facing application: pages, authentication, HTTP endpoints |
+| `apps/worker`    | Long-running process that polls hazard feeds and stores events |
+| `packages/db`    | Database schema, client factory, migrations and shared types   |
+| `packages/email` | SMTP sending and the templates of every email                  |
 
 Applications depend on packages, never on each other. The database is the
 only integration point between the web app and the worker.

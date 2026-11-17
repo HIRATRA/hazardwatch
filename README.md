@@ -55,6 +55,7 @@ apps/
   worker/    Ingestion worker that polls hazard feeds
 packages/
   db/        Drizzle schema, database client and migrations
+  email/     Email sending and templates
 docs/
   architecture.md
   adr/       Architecture decision records
