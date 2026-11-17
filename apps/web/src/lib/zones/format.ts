@@ -4,7 +4,7 @@ import type { TimeWindow } from "@/lib/events/filters";
 import { formatCoordinates, hazardSeverityLabels, timeWindowLabels } from "@/lib/events/format";
 
 import type { ALERTS_OFF } from "./input";
-import type { ZoneShape, ZoneSummary } from "./types";
+import type { Zone, ZoneShape, ZoneSummary } from "./types";
 
 /** The choices of alert threshold, from the most to the least talkative. */
 export const alertThresholdLabels: Record<HazardSeverity | typeof ALERTS_OFF, string> = {
@@ -15,11 +15,19 @@ export const alertThresholdLabels: Record<HazardSeverity | typeof ALERTS_OFF, st
   off: "No alerts",
 };
 
-/** Describes the alert threshold of a zone: "Alerts for severe events and above". */
-export function describeAlertThreshold(alertMinSeverity: HazardSeverity | null): string {
-  return alertMinSeverity
-    ? `Alerts for ${alertThresholdLabels[alertMinSeverity].toLowerCase()}`
-    : "Alerts off";
+/**
+ * Describes the alerts of a zone, such as "Alerts for severe events and
+ * above, by email too".
+ */
+export function describeAlerts({
+  alertMinSeverity,
+  emailAlerts,
+}: Pick<Zone, "alertMinSeverity" | "emailAlerts">): string {
+  if (!alertMinSeverity) {
+    return "Alerts off";
+  }
+  const threshold = alertThresholdLabels[alertMinSeverity].toLowerCase();
+  return `Alerts for ${threshold}, ${emailAlerts ? "by email too" : "in the app only"}`;
 }
 
 // Plain number formatting followed by the unit: Intl unit styles may separate

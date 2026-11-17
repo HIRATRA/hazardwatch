@@ -13,6 +13,8 @@ export interface Zone extends ZoneShape {
   name: string;
   /** Lowest severity that raises an alert, or null when alerts are off. */
   alertMinSeverity: HazardSeverity | null;
+  /** Whether alerts are also sent by email. */
+  emailAlerts: boolean;
 }
 
 /** A watch zone with a digest of the events within it. */

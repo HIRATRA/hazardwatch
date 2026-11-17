@@ -38,6 +38,7 @@ const zoneInputSchema = z.object({
   alertMinSeverity: z
     .enum(alertThresholdChoices, { error: alertError })
     .transform((value) => (value === ALERTS_OFF ? null : value)),
+  emailAlerts: z.boolean(),
 });
 
 export type ZoneInput = z.infer<typeof zoneInputSchema>;
@@ -61,6 +62,8 @@ export function parseZoneInput(form: FormData): ZoneInputResult {
     latitude: toNumber(getText(form, "latitude")),
     radiusKm: toNumber(getText(form, "radiusKm")),
     alertMinSeverity: getText(form, "alertMinSeverity"),
+    // Browsers only submit a checkbox when it is checked.
+    emailAlerts: form.has("emailAlerts"),
   });
   if (result.success) {
     return { success: true, data: result.data };

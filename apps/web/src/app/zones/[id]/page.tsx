@@ -9,7 +9,7 @@ import { buttonClassName } from "@/components/ui/button";
 import { parseEventFilters } from "@/lib/events/filters";
 import { listEvents } from "@/lib/events/queries";
 import { getSession, requireSession } from "@/lib/session";
-import { describeAlertThreshold, describeZoneArea } from "@/lib/zones/format";
+import { describeAlerts, describeZoneArea } from "@/lib/zones/format";
 import { getZone } from "@/lib/zones/queries";
 
 export async function generateMetadata({ params }: PageProps<"/zones/[id]">): Promise<Metadata> {
@@ -44,7 +44,7 @@ export default async function ZonePage({ params, searchParams }: PageProps<"/zon
             </Link>
             <h1 className="truncate text-lg font-semibold">{zone.name}</h1>
             <p className="text-muted text-xs">
-              {describeZoneArea(zone)} · {describeAlertThreshold(zone.alertMinSeverity)}
+              {describeZoneArea(zone)} · {describeAlerts(zone)}
             </p>
           </div>
           <Link href={`/zones/${zone.id}/edit`} className={buttonClassName("ghost", "shrink-0")}>

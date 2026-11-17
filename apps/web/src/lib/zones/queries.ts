@@ -30,6 +30,7 @@ const zoneColumns = {
   center: watchZones.center,
   radiusKm: watchZones.radiusKm,
   alertMinSeverity: watchZones.alertMinSeverity,
+  emailAlerts: watchZones.emailAlerts,
 };
 
 function toZone({ center, ...zone }: Pick<WatchZone, keyof typeof zoneColumns>): Zone {
