@@ -1,9 +1,12 @@
 import { createDb } from "@hazardwatch/db";
+import { createMailer } from "@hazardwatch/email";
 
+import { createAlertEmailRepository } from "./alerts/email-repository.js";
+import { ALERT_EMAIL_INTERVAL_MS, emailPendingAlerts } from "./alerts/notifier.js";
 import { loadConfig } from "./config.js";
 import { createLogger } from "./logger.js";
 import { createIngestionRepository } from "./repository.js";
-import { runScheduler } from "./scheduler.js";
+import { repeatEvery, runScheduler } from "./scheduler.js";
 import { sources } from "./sources/index.js";
 
 const config = loadConfig();
@@ -24,7 +27,31 @@ if (sources.length === 0) {
   logger.warn("no sources registered, nothing to ingest");
 }
 
+/** Emails waiting alerts on a fixed interval, when an SMTP server is configured. */
+async function runAlertEmails(): Promise<void> {
+  if (!config.SMTP_URL || !config.APP_URL) {
+    logger.warn("SMTP_URL is not set, alerts are not emailed");
+    return;
+  }
+  const deps = {
+    repository: createAlertEmailRepository(db),
+    mailer: createMailer({ smtpUrl: config.SMTP_URL, from: config.EMAIL_FROM }),
+    appUrl: config.APP_URL,
+    logger: logger.child({ task: "alert-emails" }),
+  };
+  await repeatEvery(
+    ALERT_EMAIL_INTERVAL_MS,
+    async () => {
+      await emailPendingAlerts(deps);
+    },
+    controller.signal,
+  );
+}
+
 logger.info({ sources: sources.map((source) => source.id) }, "worker started");
-await runScheduler(sources, { repository, logger }, controller.signal);
+await Promise.all([
+  runScheduler(sources, { repository, logger }, controller.signal),
+  runAlertEmails(),
+]);
 await db.$client.end({ timeout: 5 });
 logger.info("worker stopped");

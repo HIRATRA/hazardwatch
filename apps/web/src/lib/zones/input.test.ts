@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { MAX_ZONE_NAME_LENGTH, parseZoneInput } from "./input";
 
-type ZoneField = "name" | "longitude" | "latitude" | "radiusKm" | "alertMinSeverity";
+type ZoneField =
+  "name" | "longitude" | "latitude" | "radiusKm" | "alertMinSeverity" | "emailAlerts";
 
-function zoneForm(fields: Partial<Record<ZoneField, string>>) {
+/** A submitted zone form. A null field is left out, as an unchecked checkbox is. */
+function zoneForm(fields: Partial<Record<ZoneField, string | null>>) {
   const form = new FormData();
   const values = {
     name: "Lisbon office",
@@ -12,10 +14,13 @@ function zoneForm(fields: Partial<Record<ZoneField, string>>) {
     latitude: "38.7223",
     radiusKm: "100",
     alertMinSeverity: "moderate",
+    emailAlerts: "on",
     ...fields,
   };
   for (const [name, value] of Object.entries(values)) {
-    form.set(name, value);
+    if (value !== null) {
+      form.set(name, value);
+    }
   }
   return form;
 }
@@ -30,7 +35,15 @@ describe("parseZoneInput", () => {
         latitude: 38.7223,
         radiusKm: 100,
         alertMinSeverity: "moderate",
+        emailAlerts: true,
       },
+    });
+  });
+
+  it("keeps alerts in the app when the email box is unchecked", () => {
+    expect(parseZoneInput(zoneForm({ emailAlerts: null }))).toMatchObject({
+      success: true,
+      data: { emailAlerts: false },
     });
   });
 

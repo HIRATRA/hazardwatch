@@ -2,6 +2,10 @@
 export default {
   extends: ["@commitlint/config-conventional"],
   rules: {
-    "scope-enum": [2, "always", ["web", "worker", "db", "auth", "ui", "deps", "github", "release"]],
+    "scope-enum": [
+      2,
+      "always",
+      ["web", "worker", "db", "email", "auth", "ui", "deps", "github", "release"],
+    ],
   },
 };

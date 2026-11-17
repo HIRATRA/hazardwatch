@@ -73,6 +73,7 @@ export function ZoneForm<CancelRoute extends string>({
   const [alertMinSeverity, setAlertMinSeverity] = useState<string>(
     zone ? (zone.alertMinSeverity ?? ALERTS_OFF) : defaultAlertMinSeverity,
   );
+  const [emailAlerts, setEmailAlerts] = useState(zone?.emailAlerts ?? true);
   const [locationStatus, setLocationStatus] = useState<"idle" | "locating" | "failed">("idle");
 
   const center = parseCenter(latitude, longitude);
@@ -198,6 +199,27 @@ export function ZoneForm<CancelRoute extends string>({
             onChange={(event) => setAlertMinSeverity(event.target.value)}
             error={errors.alertMinSeverity}
           />
+
+          <label className="-mt-2 flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="emailAlerts"
+              checked={emailAlerts}
+              onChange={(event) => setEmailAlerts(event.target.checked)}
+              disabled={alertMinSeverity === ALERTS_OFF}
+              className="accent-accent mt-0.5 size-4"
+            />
+            <span>
+              Send these alerts by email too
+              <span className="text-muted block text-xs">
+                Once your email address is confirmed.
+              </span>
+            </span>
+          </label>
+          {/* A disabled checkbox is not submitted. Keep the choice for when alerts come back on. */}
+          {alertMinSeverity === ALERTS_OFF && emailAlerts && (
+            <input type="hidden" name="emailAlerts" value="on" />
+          )}
 
           {errors.form && (
             <p role="alert" className="text-danger text-sm">

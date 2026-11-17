@@ -18,7 +18,7 @@ interactive map, and alerts you when an event hits an area you care about.
 | Interactive map with filters                                     | Done    |
 | Watch zones                                                      | Done    |
 | Alerts when an event reaches a watch zone                        | Done    |
-| Alerts delivered by email                                        | Planned |
+| Alerts delivered by email                                        | Done    |
 | Assistant that summarises the situation nearby                   | Planned |
 
 ## Tech stack
@@ -38,13 +38,14 @@ You need Node.js 22.12 or later, pnpm 10 and Docker.
 ```sh
 pnpm install
 cp .env.example .env    # then set BETTER_AUTH_SECRET
-docker compose up -d    # PostgreSQL with PostGIS on port 5433
+docker compose up -d    # PostgreSQL with PostGIS on port 5433, Mailpit on 1025
 pnpm db:migrate
 pnpm dev
 ```
 
 The web app runs on <http://localhost:3000>. Generate a secret with
-`openssl rand -base64 32`.
+`openssl rand -base64 32`. Emails sent in development never leave your
+machine: Mailpit catches them and shows them on <http://localhost:8025>.
 
 ## Project structure
 
@@ -54,6 +55,7 @@ apps/
   worker/    Ingestion worker that polls hazard feeds
 packages/
   db/        Drizzle schema, database client and migrations
+  email/     Email sending and templates
 docs/
   architecture.md
   adr/       Architecture decision records

@@ -1,21 +1,25 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  describeAlertThreshold,
-  describeRecentEvents,
-  describeZoneArea,
-  formatRadius,
-} from "./format";
+import { describeAlerts, describeRecentEvents, describeZoneArea, formatRadius } from "./format";
 
-describe("describeAlertThreshold", () => {
+describe("describeAlerts", () => {
   it("names the lowest severity that raises an alert", () => {
-    expect(describeAlertThreshold("minor")).toBe("Alerts for every event");
-    expect(describeAlertThreshold("severe")).toBe("Alerts for severe events and above");
-    expect(describeAlertThreshold("extreme")).toBe("Alerts for extreme events only");
+    expect(describeAlerts({ alertMinSeverity: "minor", emailAlerts: true })).toBe(
+      "Alerts for every event, by email too",
+    );
+    expect(describeAlerts({ alertMinSeverity: "extreme", emailAlerts: true })).toBe(
+      "Alerts for extreme events only, by email too",
+    );
+  });
+
+  it("says when alerts stay in the app", () => {
+    expect(describeAlerts({ alertMinSeverity: "severe", emailAlerts: false })).toBe(
+      "Alerts for severe events and above, in the app only",
+    );
   });
 
   it("says when alerts are off", () => {
-    expect(describeAlertThreshold(null)).toBe("Alerts off");
+    expect(describeAlerts({ alertMinSeverity: null, emailAlerts: true })).toBe("Alerts off");
   });
 });
 

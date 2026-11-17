@@ -15,10 +15,12 @@ flowchart LR
     feeds["Open data feeds<br/>USGS, NASA FIRMS, GDACS"]
     browser(("Browser"))
     tiles["OpenFreeMap<br/>vector tiles"]
+    smtp["SMTP server<br/>Mailpit in development"]
 
     subgraph worker ["apps/worker"]
         scheduler["Scheduler"] --> adapters["Source adapters"]
         adapters --> repository["Ingestion repository"]
+        scheduler --> notifier["Alert emails"]
     end
 
     subgraph web ["apps/web (Next.js)"]
@@ -40,6 +42,8 @@ flowchart LR
     repository --> events
     repository --> runs
     repository -- "matches zones" --> alerts
+    notifier -- "claims" --> alerts
+    notifier -- "alert digests" --> smtp
     browser --> pages
     browser --> actions
     browser --> authApi
@@ -51,13 +55,15 @@ flowchart LR
     actions --> zones
     actions --> alerts
     authApi --> authTables
+    authApi -- "address confirmations" --> smtp
 ```
 
-| Package       | Responsibility                                                 |
-| ------------- | -------------------------------------------------------------- |
-| `apps/web`    | User-facing application: pages, authentication, HTTP endpoints |
-| `apps/worker` | Long-running process that polls hazard feeds and stores events |
-| `packages/db` | Database schema, client factory, migrations and shared types   |
+| Package          | Responsibility                                                 |
+| ---------------- | -------------------------------------------------------------- |
+| `apps/web`       | User-facing application: pages, authentication, HTTP endpoints |
+| `apps/worker`    | Long-running process that polls hazard feeds and stores events |
+| `packages/db`    | Database schema, client factory, migrations and shared types   |
+| `packages/email` | SMTP sending and the templates of every email                  |
 
 Applications depend on packages, never on each other. The database is the
 only integration point between the web app and the worker.
@@ -73,7 +79,10 @@ only integration point between the web app and the worker.
   Sessions are stored in PostgreSQL through the Drizzle adapter, with a
   short-lived signed cookie cache to avoid a database lookup per request.
   `requireSession()` guards protected pages and the `(auth)` route group
-  redirects users who are already signed in.
+  redirects users who are already signed in. A link sent on sign-up
+  confirms the address, which alert emails require (see
+  [ADR 0009](adr/0009-email-alerts-to-confirmed-addresses-from-the-worker.md));
+  until then, the dashboard and the alerts page offer a new link.
 - **Endpoints.** `/api/auth/*` is mounted by Better Auth. `/api/health`
   checks database connectivity and returns `503` when it is unreachable, so
   it can back a load balancer or uptime probe.
@@ -131,6 +140,12 @@ only integration point between the web app and the worker.
   (see [ADR 0008](adr/0008-raise-alerts-when-events-are-written.md)).
   Alerts are raised once per zone and event, and again when the event
   grows more severe. Events that ended more than a day ago raise none.
+- **Alert emails.** Every two minutes, the worker claims the alerts waiting
+  to be emailed and sends each user one message listing theirs (see
+  [ADR 0009](adr/0009-email-alerts-to-confirmed-addresses-from-the-worker.md)).
+  Claiming locks rows with `FOR UPDATE SKIP LOCKED`, so concurrent workers
+  never send the same alert, and a failed message puts its alerts back in
+  the queue. Without `SMTP_URL`, this task does not run.
 - **Lifecycle.** `SIGINT` and `SIGTERM` abort pending waits and close the
   connection pool, which keeps restarts and deployments clean.
 
@@ -199,6 +214,16 @@ as PAGER:
   database for integration tests and drops it afterwards. Run them with
   `pnpm test:integration` while the database container is up.
 
+### Email package (`packages/email`)
+
+- **Sending.** `createMailer` wraps a Nodemailer SMTP transport behind a
+  small `Mailer` interface, which tests replace with a fake.
+- **Templates.** Every email has a plain text and an HTML version, built
+  from a shared layout with inline styles. Values that come from users or
+  feeds are escaped.
+- **Development.** Mailpit, started by `docker compose`, accepts SMTP on
+  port 1025 and shows every message on <http://localhost:8025>.
+
 ## Data model
 
 | Table                                        | Purpose                                                     |
@@ -233,6 +258,11 @@ with, so that only a more severe revision raises it again, and `read_at`
 records when the user read it. Alerts are deleted with their zone or their
 event.
 
+`watch_zones.email_alerts` says whether a zone's alerts are also emailed,
+and `zone_alerts.emailed_at` when an alert was handed to the email server.
+Alerts still waiting have none, and a partial index on them keeps the
+worker's lookup small.
+
 ## Ingestion flow
 
 ```mermaid
@@ -265,6 +295,9 @@ platform.
 | `DATABASE_URL`       | web, worker | PostgreSQL connection string                                   |
 | `BETTER_AUTH_SECRET` | web         | Secret used to sign session cookies                            |
 | `BETTER_AUTH_URL`    | web         | Public URL of the web application                              |
+| `SMTP_URL`           | web, worker | SMTP server for outgoing email. No email is sent without it    |
+| `EMAIL_FROM`         | web, worker | Sender of every email, as `Name <address>`                     |
+| `APP_URL`            | worker      | Public URL of the web application, for links in alert emails   |
 | `LOG_LEVEL`          | worker      | `fatal`, `error`, `warn`, `info` (default), `debug` or `trace` |
 
 ## Guiding principles
@@ -285,6 +318,4 @@ platform.
 The following parts are planned and not built yet:
 
 - A source adapter for NASA FIRMS satellite fire detections.
-- Alerts delivered by email, so that users learn about them away from the
-  application.
 - An assistant that summarises the situation around a place or an event.

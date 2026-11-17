@@ -23,12 +23,13 @@ pnpm dev
 
 ## Repository layout
 
-| Path          | Purpose                                                |
-| ------------- | ------------------------------------------------------ |
-| `apps/web`    | Next.js application: map, dashboard, authentication    |
-| `apps/worker` | Ingestion worker that pulls hazard feeds on a schedule |
-| `packages/db` | Drizzle schema, database client and migrations         |
-| `docs`        | Architecture overview and decision records             |
+| Path             | Purpose                                                 |
+| ---------------- | ------------------------------------------------------- |
+| `apps/web`       | Next.js application: map, dashboard, authentication     |
+| `apps/worker`    | Ingestion worker that pulls hazard feeds on a schedule  |
+| `packages/db`    | Drizzle schema, database client and migrations          |
+| `packages/email` | Email sending and templates shared by both applications |
+| `docs`           | Architecture overview and decision records              |
 
 Read [docs/architecture.md](docs/architecture.md) before making structural
 changes. Significant technical decisions are recorded in
@@ -60,8 +61,8 @@ and are checked by commitlint on every commit.
 <optional body explaining what and why, wrapped at 72 columns>
 ```
 
-Allowed scopes: `web`, `worker`, `db`, `auth`, `ui`, `deps`, `github`,
-`release`.
+Allowed scopes: `web`, `worker`, `db`, `email`, `auth`, `ui`, `deps`,
+`github`, `release`.
 
 Examples:
 

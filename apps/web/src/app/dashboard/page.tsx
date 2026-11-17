@@ -1,6 +1,7 @@
 import { count, desc, hazardEvents, ingestionRuns } from "@hazardwatch/db";
 import type { Metadata } from "next";
 
+import { EmailVerificationNotice } from "@/components/auth/email-verification-notice";
 import { AccountActions } from "@/components/layout/account-actions";
 import { SiteHeader } from "@/components/layout/site-header";
 import { db } from "@/lib/db";
@@ -10,8 +11,11 @@ export const metadata: Metadata = { title: "Dashboard" };
 
 const dateFormatter = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" });
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   const { user } = await requireSession();
+  // Better Auth sends users back here with an error code, such as
+  // TOKEN_EXPIRED, when a confirmation link does not work.
+  const { error } = await searchParams;
 
   const [[eventStats], [lastRun]] = await Promise.all([
     db.select({ total: count() }).from(hazardEvents),
@@ -29,6 +33,14 @@ export default async function DashboardPage() {
         <p className="text-muted mt-1">
           Signed in as {user.email}. Here is the current state of the hazard feed.
         </p>
+
+        {!user.emailVerified && (
+          <EmailVerificationNotice
+            email={user.email}
+            invalidLink={error !== undefined}
+            className="mt-6"
+          />
+        )}
 
         <dl className="mt-8 grid gap-4 sm:grid-cols-2">
           <div className="border-border bg-surface-raised rounded-lg border p-5">

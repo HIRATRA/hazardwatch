@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  boolean,
   check,
   geometry,
   index,
@@ -35,6 +36,8 @@ export const watchZones = pgTable(
      * or null when the user does not want alerts for it.
      */
     alertMinSeverity: hazardSeverity("alert_min_severity").default(defaultAlertMinSeverity),
+    /** Whether the zone's alerts are also sent by email. */
+    emailAlerts: boolean("email_alerts").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
@@ -70,11 +73,20 @@ export const zoneAlerts = pgTable(
     raisedAt: timestamp("raised_at", { withTimezone: true }).notNull().defaultNow(),
     /** When the user read the alert, or null while it is unread. */
     readAt: timestamp("read_at", { withTimezone: true }),
+    /**
+     * When the alert was handed to the email server, or null while it waits
+     * to be sent. Raising the alert again clears it.
+     */
+    emailedAt: timestamp("emailed_at", { withTimezone: true }),
   },
   (t) => [
     uniqueIndex("zone_alerts_zone_id_event_id_idx").on(t.zoneId, t.eventId),
     // Serves the cascade when an event is deleted.
     index("zone_alerts_event_id_idx").on(t.eventId),
+    // Serves the worker looking for alerts to email, a small share of the table.
+    index("zone_alerts_pending_email_idx")
+      .on(t.raisedAt)
+      .where(sql`${t.emailedAt} is null`),
   ],
 );
 

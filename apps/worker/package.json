@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@hazardwatch/db": "workspace:*",
+    "@hazardwatch/email": "workspace:*",
     "pino": "^10.4.0",
     "zod": "^4.6.7"
   },

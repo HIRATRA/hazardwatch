@@ -141,6 +141,7 @@ async function raiseAlerts(tx: Transaction, eventIds: readonly string[]): Promis
       severity: hazardEvents.severity,
       raisedAt: sql<Date>`now()`.as("raised_at"),
       readAt: sql<Date | null>`null`.as("read_at"),
+      emailedAt: sql<Date | null>`null`.as("emailed_at"),
     })
     .from(hazardEvents)
     .innerJoin(watchZones, eventInZone())
@@ -159,7 +160,13 @@ async function raiseAlerts(tx: Transaction, eventIds: readonly string[]): Promis
     .select(reached)
     .onConflictDoUpdate({
       target: [zoneAlerts.zoneId, zoneAlerts.eventId],
-      set: { severity: sql`excluded.severity`, raisedAt: sql`now()`, readAt: null },
+      // Raised again: unread, and emailed again if the zone asks for it.
+      set: {
+        severity: sql`excluded.severity`,
+        raisedAt: sql`now()`,
+        readAt: null,
+        emailedAt: null,
+      },
       setWhere: sql`excluded.severity > ${zoneAlerts.severity}`,
     })
     .returning({ id: zoneAlerts.id });

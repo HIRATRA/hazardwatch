@@ -15,6 +15,7 @@ new record that supersedes the old one.
 | [0006](0006-model-hazard-events-as-activity-periods.md)             | Model hazard events as activity periods              | Accepted |
 | [0007](0007-define-watch-zones-as-circles-on-the-earths-surface.md) | Define watch zones as circles on the Earth's surface | Accepted |
 | [0008](0008-raise-alerts-when-events-are-written.md)                | Raise alerts when events are written                 | Accepted |
+| [0009](0009-email-alerts-to-confirmed-addresses-from-the-worker.md) | Email alerts to confirmed addresses from the worker  | Accepted |
 
 ## Writing a new record
 
