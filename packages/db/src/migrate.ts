@@ -1,8 +1,4 @@
-import { fileURLToPath } from "node:url";
-
-import { drizzle } from "drizzle-orm/postgres-js";
-import { migrate } from "drizzle-orm/postgres-js/migrator";
-import postgres from "postgres";
+import { applyMigrations } from "./migrations.js";
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -10,12 +6,5 @@ if (!url) {
   process.exit(1);
 }
 
-const client = postgres(url, { max: 1, onnotice: () => {} });
-const migrationsFolder = fileURLToPath(new URL("../drizzle", import.meta.url));
-
-try {
-  await migrate(drizzle(client), { migrationsFolder });
-  console.log("Migrations applied");
-} finally {
-  await client.end();
-}
+await applyMigrations(url);
+console.log("Migrations applied");

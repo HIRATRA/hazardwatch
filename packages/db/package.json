@@ -11,6 +11,10 @@
     "./constants": {
       "types": "./dist/constants.d.ts",
       "default": "./dist/constants.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "default": "./dist/testing.js"
     }
   },
   "files": [

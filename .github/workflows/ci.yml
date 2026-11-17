@@ -86,3 +86,6 @@ jobs:
             git status --short -- packages/db/drizzle
             exit 1
           fi
+      # Each run creates and drops its own database on the service container.
+      - name: Run integration tests
+        run: pnpm test:integration
