@@ -13,7 +13,7 @@ const features = [
   },
   {
     title: "Instant alerts",
-    body: "Get notified by email or webhook as soon as an event intersects one of your zones.",
+    body: "Get an alert as soon as an event reaches one of your zones, from the severity you choose.",
   },
 ];
 
