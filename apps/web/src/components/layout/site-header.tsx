@@ -12,13 +12,14 @@ export function SiteHeader({ children, fullWidth = false }: SiteHeaderProps) {
   return (
     <header className="border-border border-b">
       <div
-        className={`flex items-center justify-between gap-6 px-6 py-4 ${fullWidth ? "" : "mx-auto max-w-5xl"}`}
+        className={`flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-4 ${fullWidth ? "" : "mx-auto max-w-5xl"}`}
       >
+        {/* On narrow screens the account actions wrap below the navigation. */}
         <div className="flex items-center gap-6">
           <Link href="/" className="font-mono text-sm font-semibold tracking-widest uppercase">
             HazardWatch
           </Link>
-          <nav aria-label="Main" className="flex items-center gap-4 text-sm">
+          <nav aria-label="Main" className="flex items-center gap-4 text-sm whitespace-nowrap">
             <Link href="/map" className="text-muted hover:text-neutral-100">
               Live map
             </Link>
@@ -27,7 +28,7 @@ export function SiteHeader({ children, fullWidth = false }: SiteHeaderProps) {
             </Link>
           </nav>
         </div>
-        <div className="flex items-center gap-4 text-sm">{children}</div>
+        <div className="flex items-center gap-4 text-sm whitespace-nowrap">{children}</div>
       </div>
     </header>
   );
