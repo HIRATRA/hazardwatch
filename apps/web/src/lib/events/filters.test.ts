@@ -14,21 +14,34 @@ describe("parseEventFilters", () => {
   });
 
   it("reads valid values", () => {
-    expect(parseEventFilters({ window: "30d", severity: "severe" })).toEqual({
+    expect(parseEventFilters({ kind: "flood", window: "30d", severity: "severe" })).toEqual({
+      kind: "flood",
       window: "30d",
       severity: "severe",
     });
   });
 
   it("falls back to the default for each invalid value", () => {
-    expect(parseEventFilters({ window: "1y", severity: "severe" })).toEqual({
+    expect(parseEventFilters({ kind: "meteor", window: "24h", severity: "severe" })).toEqual({
+      kind: defaultEventFilters.kind,
+      window: "24h",
+      severity: "severe",
+    });
+    expect(parseEventFilters({ kind: "flood", window: "1y", severity: "severe" })).toEqual({
+      kind: "flood",
       window: defaultEventFilters.window,
       severity: "severe",
     });
-    expect(parseEventFilters({ window: "24h", severity: "apocalyptic" })).toEqual({
+    expect(parseEventFilters({ kind: "flood", window: "24h", severity: "apocalyptic" })).toEqual({
+      kind: "flood",
       window: "24h",
       severity: defaultEventFilters.severity,
     });
+  });
+
+  it("shows every type of hazard unless one is chosen", () => {
+    expect(parseEventFilters({}).kind).toBeNull();
+    expect(parseEventFilters({ kind: "" }).kind).toBeNull();
   });
 
   it("keeps the first value of a repeated parameter", () => {
@@ -42,7 +55,7 @@ describe("toSearchParams", () => {
   });
 
   it("round-trips through parseEventFilters", () => {
-    const filters = { window: "24h", severity: "moderate" } as const;
+    const filters = { kind: "wildfire", window: "24h", severity: "moderate" } as const;
     const params = Object.fromEntries(toSearchParams(filters));
 
     expect(parseEventFilters(params)).toEqual(filters);

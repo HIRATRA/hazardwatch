@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, gte, hazardEvents, inArray } from "@hazardwatch/db";
+import { and, desc, eq, gte, hazardEvents, inArray } from "@hazardwatch/db";
 
 import { db } from "@/lib/db";
 
@@ -42,6 +42,7 @@ export async function listEvents(filters: EventFilters, now = new Date()): Promi
     .from(hazardEvents)
     .where(
       and(
+        filters.kind ? eq(hazardEvents.kind, filters.kind) : undefined,
         gte(hazardEvents.activeUntil, windowStart(filters.window, now)),
         inArray(hazardEvents.severity, severitiesAtLeast(filters.severity)),
       ),
