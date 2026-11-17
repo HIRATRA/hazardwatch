@@ -22,6 +22,13 @@
       "when": 1794938536683,
       "tag": "0002_add_watch_zones",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794943458858,
+      "tag": "0003_add_zone_alerts",
+      "breakpoints": true
     }
   ]
 }
