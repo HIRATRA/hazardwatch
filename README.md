@@ -38,13 +38,14 @@ You need Node.js 22.12 or later, pnpm 10 and Docker.
 ```sh
 pnpm install
 cp .env.example .env    # then set BETTER_AUTH_SECRET
-docker compose up -d    # PostgreSQL with PostGIS on port 5433
+docker compose up -d    # PostgreSQL with PostGIS on port 5433, Mailpit on 1025
 pnpm db:migrate
 pnpm dev
 ```
 
 The web app runs on <http://localhost:3000>. Generate a secret with
-`openssl rand -base64 32`.
+`openssl rand -base64 32`. Emails sent in development never leave your
+machine: Mailpit catches them and shows them on <http://localhost:8025>.
 
 ## Project structure
 
