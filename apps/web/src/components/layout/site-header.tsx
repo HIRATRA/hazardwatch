@@ -18,9 +18,12 @@ export function SiteHeader({ children, fullWidth = false }: SiteHeaderProps) {
           <Link href="/" className="font-mono text-sm font-semibold tracking-widest uppercase">
             HazardWatch
           </Link>
-          <nav aria-label="Main" className="text-sm">
+          <nav aria-label="Main" className="flex items-center gap-4 text-sm">
             <Link href="/map" className="text-muted hover:text-neutral-100">
               Live map
+            </Link>
+            <Link href="/zones" className="text-muted hover:text-neutral-100">
+              Watch zones
             </Link>
           </nav>
         </div>

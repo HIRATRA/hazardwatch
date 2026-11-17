@@ -55,6 +55,7 @@ export function MapFilters({ filters }: { filters: EventFilters }) {
     >
       <div className="col-span-2">
         <Select
+          compact
           label="Type"
           name="kind"
           value={filters.kind ?? ""}
@@ -63,6 +64,7 @@ export function MapFilters({ filters }: { filters: EventFilters }) {
         />
       </div>
       <Select
+        compact
         label="Period"
         name="window"
         value={filters.window}
@@ -70,6 +72,7 @@ export function MapFilters({ filters }: { filters: EventFilters }) {
         onChange={(event) => update({ window: event.target.value })}
       />
       <Select
+        compact
         label="Severity"
         name="severity"
         value={filters.severity}
