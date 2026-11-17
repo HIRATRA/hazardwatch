@@ -2,13 +2,16 @@ import { describe, expect, it } from "vitest";
 
 import { isZoneId, MAX_ZONE_NAME_LENGTH, parseZoneInput } from "./input";
 
-function zoneForm(fields: Partial<Record<"name" | "longitude" | "latitude" | "radiusKm", string>>) {
+type ZoneField = "name" | "longitude" | "latitude" | "radiusKm" | "alertMinSeverity";
+
+function zoneForm(fields: Partial<Record<ZoneField, string>>) {
   const form = new FormData();
   const values = {
     name: "Lisbon office",
     longitude: "-9.1393",
     latitude: "38.7223",
     radiusKm: "100",
+    alertMinSeverity: "moderate",
     ...fields,
   };
   for (const [name, value] of Object.entries(values)) {
@@ -21,7 +24,27 @@ describe("parseZoneInput", () => {
   it("reads a valid zone", () => {
     expect(parseZoneInput(zoneForm({ name: "  Lisbon office " }))).toEqual({
       success: true,
-      data: { name: "Lisbon office", longitude: -9.1393, latitude: 38.7223, radiusKm: 100 },
+      data: {
+        name: "Lisbon office",
+        longitude: -9.1393,
+        latitude: 38.7223,
+        radiusKm: 100,
+        alertMinSeverity: "moderate",
+      },
+    });
+  });
+
+  it("turns alerts off", () => {
+    expect(parseZoneInput(zoneForm({ alertMinSeverity: "off" }))).toMatchObject({
+      success: true,
+      data: { alertMinSeverity: null },
+    });
+  });
+
+  it.each(["", "loud", "Moderate"])("rejects an alert threshold of %j", (alertMinSeverity) => {
+    expect(parseZoneInput(zoneForm({ alertMinSeverity }))).toEqual({
+      success: false,
+      errors: { alertMinSeverity: "Choose which events to be alerted about." },
     });
   });
 

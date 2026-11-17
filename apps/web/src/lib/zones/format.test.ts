@@ -1,6 +1,23 @@
 import { describe, expect, it } from "vitest";
 
-import { describeRecentEvents, describeZoneArea, formatRadius } from "./format";
+import {
+  describeAlertThreshold,
+  describeRecentEvents,
+  describeZoneArea,
+  formatRadius,
+} from "./format";
+
+describe("describeAlertThreshold", () => {
+  it("names the lowest severity that raises an alert", () => {
+    expect(describeAlertThreshold("minor")).toBe("Alerts for every event");
+    expect(describeAlertThreshold("severe")).toBe("Alerts for severe events and above");
+    expect(describeAlertThreshold("extreme")).toBe("Alerts for extreme events only");
+  });
+
+  it("says when alerts are off", () => {
+    expect(describeAlertThreshold(null)).toBe("Alerts off");
+  });
+});
 
 describe("formatRadius", () => {
   it("groups thousands", () => {

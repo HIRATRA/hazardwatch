@@ -1,5 +1,6 @@
 "use client";
 
+import { defaultAlertMinSeverity } from "@hazardwatch/db/constants";
 import type { Route } from "next";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -9,9 +10,11 @@ import type { ZoneFormState } from "@/app/zones/actions";
 import { Button, buttonClassName } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Select } from "@/components/ui/select";
-import { formatRadius } from "@/lib/zones/format";
+import { alertThresholdLabels, formatRadius } from "@/lib/zones/format";
 import { roundCoordinate } from "@/lib/zones/geometry";
 import {
+  alertThresholdChoices,
+  ALERTS_OFF,
   DEFAULT_ZONE_RADIUS_KM,
   MAX_ZONE_NAME_LENGTH,
   zoneRadiusOptionsKm,
@@ -31,6 +34,11 @@ const ZonePickerMap = dynamic(
 );
 
 const initialState: ZoneFormState = { errors: {} };
+
+const alertOptions = alertThresholdChoices.map((value) => ({
+  value,
+  label: alertThresholdLabels[value],
+}));
 
 interface ZoneFormProps<CancelRoute extends string> {
   title: string;
@@ -62,6 +70,9 @@ export function ZoneForm<CancelRoute extends string>({
   const [radiusKm, setRadiusKm] = useState(zone?.radiusKm ?? DEFAULT_ZONE_RADIUS_KM);
   const [latitude, setLatitude] = useState(zone ? String(zone.latitude) : "");
   const [longitude, setLongitude] = useState(zone ? String(zone.longitude) : "");
+  const [alertMinSeverity, setAlertMinSeverity] = useState<string>(
+    zone ? (zone.alertMinSeverity ?? ALERTS_OFF) : defaultAlertMinSeverity,
+  );
   const [locationStatus, setLocationStatus] = useState<"idle" | "locating" | "failed">("idle");
 
   const center = parseCenter(latitude, longitude);
@@ -178,6 +189,15 @@ export function ZoneForm<CancelRoute extends string>({
               )}
             </div>
           </fieldset>
+
+          <Select
+            label="Alert me about"
+            name="alertMinSeverity"
+            value={alertMinSeverity}
+            options={alertOptions}
+            onChange={(event) => setAlertMinSeverity(event.target.value)}
+            error={errors.alertMinSeverity}
+          />
 
           {errors.form && (
             <p role="alert" className="text-danger text-sm">

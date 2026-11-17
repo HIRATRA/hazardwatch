@@ -19,8 +19,8 @@ export interface ZoneFormState {
   errors: ZoneFormErrors & { form?: string };
 }
 
-function toRow({ name, longitude, latitude, radiusKm }: ZoneInput) {
-  return { name, radiusKm, center: { x: longitude, y: latitude } };
+function toRow({ name, longitude, latitude, radiusKm, alertMinSeverity }: ZoneInput) {
+  return { name, radiusKm, alertMinSeverity, center: { x: longitude, y: latitude } };
 }
 
 export async function createZone(_state: ZoneFormState, form: FormData): Promise<ZoneFormState> {
