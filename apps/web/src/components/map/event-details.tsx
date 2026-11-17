@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 
-import { RelativeTime } from "@/components/ui/relative-time";
 import {
   formatCoordinates,
   hazardKindLabels,
@@ -11,6 +10,7 @@ import {
 } from "@/lib/events/format";
 import type { MapEvent } from "@/lib/events/types";
 
+import { EventTime, isInstantaneous } from "./event-time";
 import { SeverityDot } from "./severity";
 
 interface EventDetailsProps {
@@ -59,9 +59,9 @@ export function EventDetails({ event, now, onClose, className = "" }: EventDetai
           <SeverityDot severity={event.severity} />
           {hazardSeverityLabels[event.severity]}
         </dd>
-        <dt className="text-muted">Occurred</dt>
+        <dt className="text-muted">{isInstantaneous(event) ? "Occurred" : "Active"}</dt>
         <dd>
-          <RelativeTime date={event.occurredAt} now={now} />
+          <EventTime event={event} now={now} />
         </dd>
         <dt className="text-muted">Type</dt>
         <dd>{hazardKindLabels[event.kind]}</dd>

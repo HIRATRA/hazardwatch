@@ -8,8 +8,13 @@ export interface MapEvent {
   severity: HazardSeverity;
   title: string;
   url: string | null;
-  /** ISO 8601 timestamp. */
+  /** ISO 8601 time at which the event started. */
   occurredAt: string;
+  /**
+   * ISO 8601 end of the period during which the event is active. Equal to
+   * `occurredAt` for instantaneous events such as earthquakes.
+   */
+  activeUntil: string;
   longitude: number;
   latitude: number;
 }
