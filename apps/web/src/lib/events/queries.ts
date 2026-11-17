@@ -1,8 +1,9 @@
 import "server-only";
 
-import { and, desc, eq, gte, hazardEvents, inArray } from "@hazardwatch/db";
+import { and, desc, eq, gte, hazardEvents, inArray, watchZones } from "@hazardwatch/db";
 
 import { db } from "@/lib/db";
+import { eventInZone } from "@/lib/zones/queries";
 
 import { severitiesAtLeast, windowStart, type EventFilters } from "./filters";
 import type { MapEvent } from "./types";
@@ -22,12 +23,21 @@ export interface EventsResult {
   generatedAt: string;
 }
 
+interface ListEventsOptions {
+  /** Only keep the events located within this watch zone. */
+  zoneId?: string;
+  now?: Date;
+}
+
 /**
  * Lists the events active at some point during the time window, so that a
  * flood that started a month ago and is still going on is included.
  */
-export async function listEvents(filters: EventFilters, now = new Date()): Promise<EventsResult> {
-  const rows = await db
+export async function listEvents(
+  filters: EventFilters,
+  { zoneId, now = new Date() }: ListEventsOptions = {},
+): Promise<EventsResult> {
+  const query = db
     .select({
       id: hazardEvents.id,
       source: hazardEvents.source,
@@ -40,6 +50,11 @@ export async function listEvents(filters: EventFilters, now = new Date()): Promi
       location: hazardEvents.location,
     })
     .from(hazardEvents)
+    .$dynamic();
+
+  const rows = await (
+    zoneId ? query.innerJoin(watchZones, and(eq(watchZones.id, zoneId), eventInZone())) : query
+  )
     .where(
       and(
         filters.kind ? eq(hazardEvents.kind, filters.kind) : undefined,

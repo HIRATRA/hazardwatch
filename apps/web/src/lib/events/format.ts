@@ -1,5 +1,7 @@
 import type { HazardKind, HazardSeverity, HazardSource } from "@hazardwatch/db/constants";
 
+import type { TimeWindow } from "./filters";
+
 export const hazardKindLabels: Record<HazardKind, string> = {
   earthquake: "Earthquake",
   wildfire: "Wildfire",
@@ -20,6 +22,12 @@ export const hazardSourceLabels: Record<HazardSource, string> = {
   usgs: "USGS",
   nasa_firms: "NASA FIRMS",
   gdacs: "GDACS",
+};
+
+export const timeWindowLabels: Record<TimeWindow, string> = {
+  "24h": "Past 24 hours",
+  "7d": "Past 7 days",
+  "30d": "Past 30 days",
 };
 
 /** Formats a position as "15.03° S, 76.03° W". */

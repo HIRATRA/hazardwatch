@@ -1,7 +1,8 @@
 "use client";
 
 import { hazardKinds, hazardSeverities } from "@hazardwatch/db/constants";
-import { useRouter } from "next/navigation";
+import type { Route } from "next";
+import { usePathname, useRouter } from "next/navigation";
 import { useTransition } from "react";
 
 import { Select } from "@/components/ui/select";
@@ -10,20 +11,13 @@ import {
   timeWindows,
   toSearchParams,
   type EventFilters,
-  type TimeWindow,
 } from "@/lib/events/filters";
-import { hazardKindLabels, hazardSeverityLabels } from "@/lib/events/format";
+import { hazardKindLabels, hazardSeverityLabels, timeWindowLabels } from "@/lib/events/format";
 
 const kindOptions = [
   { value: "", label: "All types" },
   ...hazardKinds.map((value) => ({ value, label: hazardKindLabels[value] })),
 ];
-
-const timeWindowLabels: Record<TimeWindow, string> = {
-  "24h": "Past 24 hours",
-  "7d": "Past 7 days",
-  "30d": "Past 30 days",
-};
 
 const timeWindowOptions = timeWindows.map((value) => ({ value, label: timeWindowLabels[value] }));
 
@@ -35,16 +29,20 @@ const severityOptions = hazardSeverities.map((value) => ({
 /**
  * Filters live in the URL, so a filtered view can be shared or bookmarked.
  * Changing one navigates and lets the server render the matching events.
+ * They apply to the current page, whether the live map or a watch zone.
  */
 export function MapFilters({ filters }: { filters: EventFilters }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [pending, startTransition] = useTransition();
 
   function update(change: Partial<Record<keyof EventFilters, string>>) {
     const next = parseEventFilters({ ...Object.fromEntries(toSearchParams(filters)), ...change });
     const query = toSearchParams(next).toString();
+    // The current pathname is a valid route by definition.
+    const href = (query ? `${pathname}?${query}` : pathname) as Route;
     startTransition(() => {
-      router.replace(query ? `/map?${query}` : "/map", { scroll: false });
+      router.replace(href, { scroll: false });
     });
   }
 

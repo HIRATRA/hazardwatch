@@ -40,8 +40,11 @@ export async function createZone(_state: ZoneFormState, form: FormData): Promise
     };
   }
 
-  await db.insert(watchZones).values({ userId: user.id, ...toRow(input.data) });
-  redirect("/zones");
+  const [zone] = await db
+    .insert(watchZones)
+    .values({ userId: user.id, ...toRow(input.data) })
+    .returning({ id: watchZones.id });
+  redirect(zone ? `/zones/${zone.id}` : "/zones");
 }
 
 export async function updateZone(
@@ -65,7 +68,7 @@ export async function updateZone(
   if (updated.length === 0) {
     return { errors: { form: "This zone no longer exists." } };
   }
-  redirect("/zones");
+  redirect(`/zones/${id}`);
 }
 
 export async function deleteZone(id: string): Promise<void> {

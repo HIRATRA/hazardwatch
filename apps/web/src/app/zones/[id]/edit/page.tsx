@@ -30,7 +30,7 @@ export default async function EditZonePage({ params }: PageProps<"/zones/[id]/ed
           zone={zone}
           action={updateZone.bind(null, zone.id)}
           submitLabel="Save changes"
-          cancelHref="/zones"
+          cancelHref={`/zones/${zone.id}`}
         >
           <section aria-labelledby="delete-zone-title" className="border-border border-t p-6">
             <h2 id="delete-zone-title" className="text-sm font-medium">

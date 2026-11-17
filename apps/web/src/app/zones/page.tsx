@@ -3,11 +3,12 @@ import Link from "next/link";
 
 import { AccountActions } from "@/components/layout/account-actions";
 import { SiteHeader } from "@/components/layout/site-header";
+import { SeverityDot } from "@/components/map/severity";
 import { buttonClassName } from "@/components/ui/button";
 import { requireSession } from "@/lib/session";
-import { describeZoneArea } from "@/lib/zones/format";
+import { describeRecentEvents, describeZoneArea } from "@/lib/zones/format";
 import { MAX_ZONES_PER_USER } from "@/lib/zones/input";
-import { listZones } from "@/lib/zones/queries";
+import { listZones, RECENT_WINDOW } from "@/lib/zones/queries";
 
 export const metadata: Metadata = { title: "Watch zones" };
 
@@ -53,11 +54,15 @@ export default async function ZonesPage() {
             {zones.map((zone) => (
               <li key={zone.id}>
                 <Link
-                  href={`/zones/${zone.id}/edit`}
+                  href={`/zones/${zone.id}`}
                   className="border-border bg-surface-raised hover:border-muted focus-visible:ring-accent block rounded-lg border p-5 outline-none focus-visible:ring-2"
                 >
                   <h2 className="truncate font-medium">{zone.name}</h2>
                   <p className="text-muted mt-1 text-sm">{describeZoneArea(zone)}</p>
+                  <p className="mt-4 flex items-center gap-2 text-sm">
+                    {zone.highestSeverity && <SeverityDot severity={zone.highestSeverity} />}
+                    {describeRecentEvents(zone, RECENT_WINDOW)}
+                  </p>
                 </Link>
               </li>
             ))}

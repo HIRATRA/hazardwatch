@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 
 import type { EventFilters } from "@/lib/events/filters";
 import type { EventsResult } from "@/lib/events/queries";
+import type { ZoneShape } from "@/lib/zones/types";
 
 import { EventDetails } from "./event-details";
 import { EventList } from "./event-list";
@@ -24,10 +25,12 @@ const HazardMap = dynamic(() => import("./hazard-map").then((module) => module.H
 
 interface MapExplorerProps extends EventsResult {
   filters: EventFilters;
+  /** Watch zone the events were selected from, outlined on the map. */
+  zone?: ZoneShape;
 }
 
 /** Event list, filters and map, kept in sync through the selected event. */
-export function MapExplorer({ events, truncated, generatedAt, filters }: MapExplorerProps) {
+export function MapExplorer({ events, truncated, generatedAt, filters, zone }: MapExplorerProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const clearSelection = useCallback(() => setSelectedId(null), []);
   useAutoRefresh(REFRESH_INTERVAL_MS);
@@ -53,7 +56,7 @@ export function MapExplorer({ events, truncated, generatedAt, filters }: MapExpl
       </aside>
 
       <section aria-label="Map" className="relative order-1 min-h-0 flex-1 md:order-2">
-        <HazardMap events={events} selectedId={activeId} onSelect={setSelectedId} />
+        <HazardMap events={events} selectedId={activeId} onSelect={setSelectedId} zone={zone} />
         <SeverityLegend className="absolute bottom-3 left-3 hidden sm:block" />
         {selectedEvent && (
           <EventDetails

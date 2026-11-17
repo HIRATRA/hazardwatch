@@ -1,12 +1,37 @@
 import "server-only";
 
-import { and, asc, count, eq, sql, watchZones, type WatchZone } from "@hazardwatch/db";
+import {
+  and,
+  asc,
+  count,
+  eq,
+  gte,
+  hazardEvents,
+  sql,
+  watchZones,
+  type HazardSeverity,
+  type SQL,
+  type WatchZone,
+} from "@hazardwatch/db";
 import { cache } from "react";
 
 import { db } from "@/lib/db";
+import { windowStart, type TimeWindow } from "@/lib/events/filters";
 
 import { isZoneId } from "./input";
-import type { Zone } from "./types";
+import type { Zone, ZoneSummary } from "./types";
+
+/** Period over which the zone list counts events. */
+export const RECENT_WINDOW: TimeWindow = "7d";
+
+/**
+ * Matches the events located within a watch zone, for queries that involve
+ * both tables. Distances are measured on the geography type, which the
+ * hazard_events_location_geography_idx index serves.
+ */
+export function eventInZone(): SQL {
+  return sql`ST_DWithin(${hazardEvents.location}::geography, ${watchZones.center}::geography, ${watchZones.radiusKm} * 1000)`;
+}
 
 const zoneColumns = {
   id: watchZones.id,
@@ -19,14 +44,32 @@ function toZone({ center, ...zone }: Pick<WatchZone, keyof typeof zoneColumns>):
   return { ...zone, longitude: center.x, latitude: center.y };
 }
 
-/** The user's zones in alphabetical order. */
-export async function listZones(userId: string): Promise<Zone[]> {
+/**
+ * The user's zones in alphabetical order, each with the events active within
+ * it during the recent window.
+ */
+export async function listZones(userId: string, now = new Date()): Promise<ZoneSummary[]> {
   const rows = await db
-    .select(zoneColumns)
+    .select({
+      ...zoneColumns,
+      recentEvents: count(hazardEvents.id),
+      // PostgreSQL orders enum values as declared, from minor to extreme.
+      highestSeverity: sql<HazardSeverity | null>`max(${hazardEvents.severity})`,
+    })
     .from(watchZones)
+    .leftJoin(
+      hazardEvents,
+      and(eventInZone(), gte(hazardEvents.activeUntil, windowStart(RECENT_WINDOW, now))),
+    )
     .where(eq(watchZones.userId, userId))
+    .groupBy(watchZones.id)
     .orderBy(sql`lower(${watchZones.name})`, asc(watchZones.createdAt));
-  return rows.map(toZone);
+
+  return rows.map(({ recentEvents, highestSeverity, ...zone }) => ({
+    ...toZone(zone),
+    recentEvents,
+    highestSeverity,
+  }));
 }
 
 /**

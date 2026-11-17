@@ -32,12 +32,12 @@ const ZonePickerMap = dynamic(
 
 const initialState: ZoneFormState = { errors: {} };
 
-interface ZoneFormProps {
+interface ZoneFormProps<CancelRoute extends string> {
   title: string;
   /** Server action that saves the zone and redirects on success. */
   action: (state: ZoneFormState, form: FormData) => Promise<ZoneFormState>;
   submitLabel: string;
-  cancelHref: Route;
+  cancelHref: Route<CancelRoute>;
   /** Zone being edited, if any. */
   zone?: Zone;
   /** Shown below the form, outside of it. */
@@ -48,14 +48,14 @@ interface ZoneFormProps {
  * Form to create or edit a zone, next to a map that previews it. The centre
  * is set by clicking the map, or typed in for keyboard users and precision.
  */
-export function ZoneForm({
+export function ZoneForm<CancelRoute extends string>({
   title,
   action,
   submitLabel,
   cancelHref,
   zone,
   children,
-}: ZoneFormProps) {
+}: ZoneFormProps<CancelRoute>) {
   const [state, formAction, pending] = useActionState(action, initialState);
   // Controlled fields keep their values when the server rejects the form.
   const [name, setName] = useState(zone?.name ?? "");
