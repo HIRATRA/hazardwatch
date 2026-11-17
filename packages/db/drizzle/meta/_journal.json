@@ -29,6 +29,13 @@
       "when": 1794943458858,
       "tag": "0003_add_zone_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794947074075,
+      "tag": "0004_track_alert_emails",
+      "breakpoints": true
     }
   ]
 }

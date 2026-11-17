@@ -141,6 +141,7 @@ async function raiseAlerts(tx: Transaction, eventIds: readonly string[]): Promis
       severity: hazardEvents.severity,
       raisedAt: sql<Date>`now()`.as("raised_at"),
       readAt: sql<Date | null>`null`.as("read_at"),
+      emailedAt: sql<Date | null>`null`.as("emailed_at"),
     })
     .from(hazardEvents)
     .innerJoin(watchZones, eventInZone())
