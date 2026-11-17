@@ -81,7 +81,9 @@ export function HazardMap({ events, selectedId, onSelect }: HazardMapProps) {
     const map = createMap(container);
     mapRef.current = map;
 
-    map.on("load", () => {
+    // Fired before tiles arrive, and again when the style is rebuilt after a
+    // lost WebGL context, which drops every source and layer added here.
+    map.on("style.load", () => {
       map.addSource(SOURCE_ID, { type: "geojson", data: latest.current.data });
       map.addLayer({
         id: EVENTS_LAYER_ID,
