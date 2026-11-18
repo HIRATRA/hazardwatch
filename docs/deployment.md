@@ -7,7 +7,7 @@ talk through PostgreSQL and standard protocols.
 | Part     | Service           | Why                                                          |
 | -------- | ----------------- | ------------------------------------------------------------ |
 | Web app  | Vercel            | Next.js hosting with deploys on every push                   |
-| Worker   | Render            | A long-running process, which serverless platforms cut short |
+| Worker   | Render, free plan | A long-running process, which serverless platforms cut short |
 | Database | Neon              | Managed PostgreSQL with the PostGIS extension                |
 | Email    | Any SMTP provider | Address confirmations and alert emails, Resend for instance  |
 
@@ -27,8 +27,8 @@ connection strings for the same database:
 Both end with `sslmode=require&channel_binding=require`, which the
 PostgreSQL driver understands: paste them as they are.
 
-Render applies migrations before each deploy of the worker. To apply them
-by hand, for instance before the web app's first deploy, run from the
+Render applies migrations at the end of each build of the worker. To apply
+them by hand, for instance before the web app's first deploy, run from the
 repository root:
 
 ```sh
@@ -63,10 +63,12 @@ their own URLs, which differ from `BETTER_AUTH_URL`.
 
 ## 3. Worker on Render
 
-Render has no free instance type for background workers: the smallest paid
-one is plenty for the worker.
+Render's background workers need a paid plan, so the worker runs as a free
+web service instead (see
+[ADR 0010](adr/0010-run-the-worker-as-a-free-render-web-service.md)).
+Render sets `PORT`, and the worker answers health checks on `/health`.
 
-[`render.yaml`](../render.yaml) describes the worker as a Render Blueprint.
+[`render.yaml`](../render.yaml) describes the service as a Render Blueprint.
 In the Render dashboard, choose **New**, then **Blueprint**, and select the
 repository. Render reads the file and asks for the values kept out of it:
 
@@ -84,6 +86,28 @@ succeeded"`, and the first pass fills the map within a minute.
 Render only asks for these values when the Blueprint is created. Change
 them later on the worker's **Environment** page.
 
+### Keeping the worker awake
+
+A free web service sleeps after 15 minutes without inbound requests, which
+would stop ingestion. Point an uptime monitor at the worker, for instance a
+free UptimeRobot HTTP monitor:
+
+- **URL:** `https://<worker service>.onrender.com/health`, shown at the top
+  of the service's page on Render.
+- **Interval:** 5 minutes.
+
+The monitor also tells you when the worker goes down.
+
+Render grants 750 free hours a month per workspace, and an always-on
+service uses about 730 of them. Keep the worker alone on the free plan of
+its workspace: when the hours run out, Render suspends every free service
+until the next month.
+
+To move to a paid background worker later, set `type: worker` and remove
+`plan`, `healthCheckPath` and the migration from the build in
+`render.yaml`, then add `preDeployCommand: node packages/db/dist/migrate.js`.
+The uptime monitor is no longer needed.
+
 ## 4. Email
 
 Any SMTP provider works. With Resend:
@@ -93,10 +117,13 @@ Any SMTP provider works. With Resend:
 3. Set the variables below on both Vercel, for address confirmations, and
    Render, for alert emails:
 
-| Variable     | Value                                          |
-| ------------ | ---------------------------------------------- |
-| `SMTP_URL`   | `smtps://resend:<API key>@smtp.resend.com:465` |
-| `EMAIL_FROM` | `HazardWatch <alerts@your-domain>`             |
+| Variable     | Value                                           |
+| ------------ | ----------------------------------------------- |
+| `SMTP_URL`   | `smtps://resend:<API key>@smtp.resend.com:2465` |
+| `EMAIL_FROM` | `HazardWatch <alerts@your-domain>`              |
+
+Render's free services cannot reach ports 465 and 587, so use Resend's
+alternative SMTPS port, 2465, which works everywhere.
 
 Alerts are only emailed to confirmed addresses, so without email nobody
 receives them by email, but the rest of the app works.
@@ -105,6 +132,8 @@ receives them by email, but the rest of the app works.
 
 - `https://<your domain>/api/health` answers `{"status":"ok"}` once the
   web app reaches the database, and `503` otherwise.
+- `https://<worker service>.onrender.com/health` answers
+  `{"status":"ok",…}` while the worker runs.
 - The live map shows events after the worker's first pass.
 - Signing up sends a confirmation email when `SMTP_URL` is set.
 
@@ -112,7 +141,8 @@ receives them by email, but the rest of the app works.
 
 Pushing to `main` redeploys the web app on Vercel. Render redeploys the
 worker once the CI checks pass, and only when the worker, the shared
-packages or the dependencies changed, applying new migrations first.
+packages or the dependencies changed, applying new migrations during the
+build.
 
 Vercel may deploy the web app before Render applies a migration it needs.
 Write migrations that the running code tolerates, such as adding a column

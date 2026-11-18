@@ -146,8 +146,12 @@ only integration point between the web app and the worker.
   Claiming locks rows with `FOR UPDATE SKIP LOCKED`, so concurrent workers
   never send the same alert, and a failed message puts its alerts back in
   the queue. Without `SMTP_URL`, this task does not run.
-- **Lifecycle.** `SIGINT` and `SIGTERM` abort pending waits and close the
-  connection pool, which keeps restarts and deployments clean.
+- **Health endpoint.** When `PORT` is set, the worker answers health checks
+  on `/health`, for hosts that run it as a web service, such as Render's
+  free plan (see [ADR 0010](adr/0010-run-the-worker-as-a-free-render-web-service.md)).
+- **Lifecycle.** `SIGINT` and `SIGTERM` abort pending waits, close the
+  health endpoint and the connection pool, which keeps restarts and
+  deployments clean.
 
 #### Sources
 
@@ -300,6 +304,7 @@ in [the deployment guide](deployment.md).
 | `EMAIL_FROM`         | web, worker | Sender of every email, as `Name <address>`                     |
 | `APP_URL`            | worker      | Public URL of the web application, for links in alert emails   |
 | `LOG_LEVEL`          | worker      | `fatal`, `error`, `warn`, `info` (default), `debug` or `trace` |
+| `PORT`               | worker      | Optional port of the health endpoint, set by the host          |
 
 ## Guiding principles
 
