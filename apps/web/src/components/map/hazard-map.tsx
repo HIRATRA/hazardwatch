@@ -27,6 +27,7 @@ import {
 } from "./event-layers";
 import { setImagery } from "./imagery-layers";
 import { createMap } from "./maplibre";
+import { ZoomControls } from "./zoom-controls";
 import { addZoneLayers } from "./zone-layers";
 
 const INTERACTIVE_LAYERS = [CLUSTERS_LAYER_ID, EVENTS_LAYER_ID];
@@ -212,6 +213,11 @@ export function HazardMap({ events, now, selectedId, onSelect, zone, imagery }: 
   return (
     <div className="absolute inset-0 bg-[#05070d] bg-[radial-gradient(ellipse_at_center,#0d1626_0%,#05070d_70%)]">
       <div ref={containerRef} className="size-full" />
+      <ZoomControls
+        getMap={() => mapRef.current}
+        withWholeGlobe
+        className="absolute right-3 bottom-10"
+      />
     </div>
   );
 }

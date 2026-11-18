@@ -4,6 +4,7 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 
 import { createMap } from "@/components/map/maplibre";
+import { ZoomControls } from "@/components/map/zoom-controls";
 import { addZoneLayers, setZone } from "@/components/map/zone-layers";
 import { roundCoordinate, zoneBounds } from "@/lib/zones/geometry";
 import type { ZoneShape } from "@/lib/zones/types";
@@ -84,6 +85,7 @@ export function ZonePickerMap({ center, radiusKm, onPick }: ZonePickerMapProps) 
   return (
     <div className="absolute inset-0">
       <div ref={containerRef} className="size-full" />
+      <ZoomControls getMap={() => mapRef.current} className="absolute right-3 bottom-10" />
     </div>
   );
 }
