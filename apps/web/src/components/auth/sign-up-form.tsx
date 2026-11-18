@@ -1,12 +1,14 @@
 "use client";
 
+import { EnvelopeSimpleIcon, LockSimpleIcon, UserIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Field } from "@/components/ui/field";
 import { authClient } from "@/lib/auth-client";
 import { getText } from "@/lib/form";
+
+import { AuthField } from "./auth-field";
+import { FormAlert, SubmitButton } from "./form-parts";
 
 const MIN_PASSWORD_LENGTH = 10;
 
@@ -40,25 +42,31 @@ export function SignUpForm() {
   }
 
   return (
-    <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-4">
-      <Field label="Name" name="name" autoComplete="name" required />
-      <Field label="Email" name="email" type="email" autoComplete="email" required />
-      <Field
+    <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-5">
+      <AuthField label="Name" name="name" icon={UserIcon} autoComplete="name" required />
+      <AuthField
+        label="Email"
+        name="email"
+        type="email"
+        icon={EnvelopeSimpleIcon}
+        autoComplete="email"
+        placeholder="you@example.com"
+        required
+      />
+      <AuthField
         label="Password"
         name="password"
         type="password"
+        icon={LockSimpleIcon}
         autoComplete="new-password"
         minLength={MIN_PASSWORD_LENGTH}
+        lengthHint
         required
       />
-      {error && (
-        <p role="alert" className="text-danger text-sm">
-          {error}
-        </p>
-      )}
-      <Button type="submit" disabled={pending}>
-        {pending ? "Creating account…" : "Create account"}
-      </Button>
+      {error && <FormAlert message={error} />}
+      <SubmitButton pending={pending} pendingLabel="Creating your account…">
+        Create account
+      </SubmitButton>
     </form>
   );
 }

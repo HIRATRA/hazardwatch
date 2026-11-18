@@ -1,12 +1,14 @@
 "use client";
 
+import { EnvelopeSimpleIcon, LockSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Field } from "@/components/ui/field";
 import { authClient } from "@/lib/auth-client";
 import { getText } from "@/lib/form";
+
+import { AuthField } from "./auth-field";
+import { FormAlert, SubmitButton } from "./form-parts";
 
 export function SignInForm() {
   const router = useRouter();
@@ -35,23 +37,28 @@ export function SignInForm() {
   }
 
   return (
-    <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-4">
-      <Field label="Email" name="email" type="email" autoComplete="email" required />
-      <Field
+    <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-5">
+      <AuthField
+        label="Email"
+        name="email"
+        type="email"
+        icon={EnvelopeSimpleIcon}
+        autoComplete="email"
+        placeholder="you@example.com"
+        required
+      />
+      <AuthField
         label="Password"
         name="password"
         type="password"
+        icon={LockSimpleIcon}
         autoComplete="current-password"
         required
       />
-      {error && (
-        <p role="alert" className="text-danger text-sm">
-          {error}
-        </p>
-      )}
-      <Button type="submit" disabled={pending}>
-        {pending ? "Signing in…" : "Sign in"}
-      </Button>
+      {error && <FormAlert message={error} />}
+      <SubmitButton pending={pending} pendingLabel="Signing in…">
+        Sign in
+      </SubmitButton>
     </form>
   );
 }
