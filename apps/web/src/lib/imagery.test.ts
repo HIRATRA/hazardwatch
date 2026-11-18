@@ -4,10 +4,12 @@ import {
   basemapImagery,
   basemapPreviewUrl,
   fetchLatestImageTime,
+  gibsImageUrl,
   gibsTileUrl,
   goesEastLayer,
   isBasemap,
   latestCompleteDay,
+  nightLightsLayer,
   settledImageTime,
   trueColorLayer,
 } from "./imagery";
@@ -133,5 +135,31 @@ describe("basemapPreviewUrl", () => {
     expect(basemapPreviewUrl("satellite", { now })).toMatch(/\/2026-11-16\/.*\/2\/1\/2\.jpg$/);
     expect(basemapPreviewUrl("live", { now })).toMatch(/GOES-East.*\/2\/1\/1\.png$/);
     expect(basemapPreviewUrl("night", { now })).toMatch(/Black_Marble.*\/2\/1\/2\.png$/);
+  });
+});
+
+describe("gibsImageUrl", () => {
+  it("asks the WMS service for one image of the area, latitude first", () => {
+    const url = new URL(
+      gibsImageUrl(nightLightsLayer, {
+        bounds: [28, -12, 62, 44],
+        time: "2016-01-01",
+        width: 1120,
+        height: 680,
+      }),
+    );
+
+    expect(url.origin + url.pathname).toBe(
+      "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi",
+    );
+    expect(Object.fromEntries(url.searchParams)).toMatchObject({
+      REQUEST: "GetMap",
+      LAYERS: "VIIRS_Black_Marble",
+      CRS: "EPSG:4326",
+      BBOX: "28,-12,62,44",
+      WIDTH: "1120",
+      HEIGHT: "680",
+      TIME: "2016-01-01",
+    });
   });
 });
