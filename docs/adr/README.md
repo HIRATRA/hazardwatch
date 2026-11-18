@@ -17,6 +17,7 @@ new record that supersedes the old one.
 | [0008](0008-raise-alerts-when-events-are-written.md)                | Raise alerts when events are written                 | Accepted |
 | [0009](0009-email-alerts-to-confirmed-addresses-from-the-worker.md) | Email alerts to confirmed addresses from the worker  | Accepted |
 | [0010](0010-run-the-worker-as-a-free-render-web-service.md)         | Run the worker as a free Render web service          | Accepted |
+| [0011](0011-group-satellite-fire-detections-into-grid-cells.md)     | Group satellite fire detections into grid cells      | Accepted |
 
 ## Writing a new record
 

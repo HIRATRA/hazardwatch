@@ -24,7 +24,9 @@ export async function ingestSource(
   let result: RunResult;
   try {
     const events = await source.fetchEvents({ signal, logger: log });
-    const { eventsUpserted, alertsRaised } = await repository.upsertEvents(events);
+    const { eventsUpserted, alertsRaised } = await repository.upsertEvents(events, {
+      windowed: source.windowed ?? false,
+    });
     result = { status: "succeeded", eventsUpserted };
     log.info(
       {

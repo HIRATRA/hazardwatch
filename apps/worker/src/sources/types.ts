@@ -18,6 +18,13 @@ export interface Source {
   readonly id: HazardSource;
   /** How often the feed should be polled, in milliseconds. */
   readonly intervalMs: number;
+  /**
+   * Whether the feed only covers a recent window, such as the past 24 hours,
+   * so that the start it reports for a lasting event moves forward while the
+   * event goes on. The repository then keeps the start of an ongoing event,
+   * and treats activity after a long enough gap as a new start.
+   */
+  readonly windowed?: boolean;
   /** Fetches the current feed and maps it to normalised events. */
   fetchEvents(context: FetchContext): Promise<IngestedEvent[]>;
 }
