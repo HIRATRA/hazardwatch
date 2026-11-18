@@ -43,10 +43,10 @@
 }
 
 /*
- * Motion of the home page: the hero rises in, headline words slide out of
- * their line, and sections fade up as they scroll into view, where the
- * browser supports scroll-driven animations. Without motion, everything
- * simply shows.
+ * Entrance of the home page hero, which plays before scripts load: the hero
+ * rises in and headline words slide out of their line. Sections further
+ * down animate with Motion as they scroll into view. Without motion,
+ * everything simply shows.
  */
 @media (prefers-reduced-motion: no-preference) {
   .rise-in {
@@ -63,14 +63,6 @@
   .signal-ring {
     animation: signal-ring 3.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
     animation-delay: calc(var(--delay, 0) * 1ms);
-  }
-
-  @supports (animation-timeline: view()) {
-    .reveal {
-      animation: rise-in linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 60%;
-    }
   }
 }
 

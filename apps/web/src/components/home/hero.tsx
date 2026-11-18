@@ -1,6 +1,11 @@
+"use client";
+
 import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
+import { motion, useScroll, useTransform } from "motion/react";
 import Link from "next/link";
-import { Fragment, type CSSProperties } from "react";
+import { Fragment, useRef, type CSSProperties } from "react";
+
+import { useMotionAllowed } from "@/components/motion/use-motion-allowed";
 
 import { SeismicEarth, type EarthEvent } from "./seismic-earth";
 
@@ -28,18 +33,41 @@ interface HeroProps {
   events: readonly EarthEvent[];
 }
 
-/** Full screen opening: the planet as a live seismogram, behind the promise. */
+/**
+ * Full screen opening: the planet as a live seismogram, behind the promise.
+ * Scrolling away, the planet recedes and the text drifts up and fades.
+ */
 export function Hero({ events }: HeroProps) {
+  const ref = useRef<HTMLElement>(null);
+  const allowed = useMotionAllowed();
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const fieldScale = useTransform(scrollYProgress, [0, 1], [1, 1.12]);
+  const fieldOpacity = useTransform(scrollYProgress, [0, 0.9], [1, 0.2]);
+  const textY = useTransform(scrollYProgress, [0, 1], [0, -140]);
+  const textOpacity = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
+
   return (
-    <section className="bg-ink relative isolate flex min-h-[100dvh] flex-col overflow-hidden">
-      <SeismicEarth events={events} className="absolute inset-0 size-full text-stone-200" />
+    <section
+      ref={ref}
+      className="bg-ink relative isolate flex min-h-[100dvh] flex-col overflow-hidden"
+    >
+      {/* The field reads its background from this layer, which must keep it. */}
+      <motion.div
+        className="bg-ink absolute inset-0"
+        style={allowed ? { scale: fieldScale, opacity: fieldOpacity } : undefined}
+      >
+        <SeismicEarth events={events} className="absolute inset-0 size-full text-stone-200" />
+      </motion.div>
       {/* Keeps the text readable where it crosses the southern lines. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 h-3/4 bg-[linear-gradient(to_top,var(--color-ink)_45%,transparent)] md:bg-[linear-gradient(100deg,var(--color-ink)_30%,transparent_68%)] md:[mask-image:linear-gradient(to_top,black_60%,transparent)]"
       />
 
-      <div className="relative mx-auto mt-auto w-full max-w-7xl px-6 pt-32 pb-16 md:pb-24">
+      <motion.div
+        className="relative mx-auto mt-auto w-full max-w-7xl px-6 pt-32 pb-16 md:pb-24"
+        style={allowed ? { y: textY, opacity: textOpacity } : undefined}
+      >
         <p
           className="rise-in text-muted flex items-center gap-2.5 font-mono text-xs tracking-[0.2em] uppercase"
           style={delay(0)}
@@ -75,7 +103,7 @@ export function Hero({ events }: HeroProps) {
             Get started
           </Link>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

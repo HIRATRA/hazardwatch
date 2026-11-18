@@ -143,9 +143,9 @@ export function SeismicEarth({ events, className = "" }: SeismicEarthProps) {
     const pointer = { x: 0, y: 0, targetX: 0, targetY: 0, strength: 0, active: false };
 
     function resize() {
-      const rect = host!.getBoundingClientRect();
-      width = rect.width;
-      height = rect.height;
+      // The layout size, which transforms such as a scroll parallax leave alone.
+      width = host!.clientWidth;
+      height = host!.clientHeight;
       // Sharp on high density screens, without drawing millions of pixels.
       let ratio = Math.min(window.devicePixelRatio || 1, 2);
       if (width * height * ratio * ratio > 5_000_000) {
@@ -375,9 +375,10 @@ export function SeismicEarth({ events, className = "" }: SeismicEarthProps) {
       if (event.pointerType !== "mouse") {
         return;
       }
+      // Converted back to layout pixels, in case the field is scaled.
       const rect = canvas.getBoundingClientRect();
-      pointer.targetX = event.clientX - rect.left;
-      pointer.targetY = event.clientY - rect.top;
+      pointer.targetX = ((event.clientX - rect.left) * width) / rect.width;
+      pointer.targetY = ((event.clientY - rect.top) * height) / rect.height;
       if (!pointer.active) {
         pointer.x = pointer.targetX;
         pointer.y = pointer.targetY;

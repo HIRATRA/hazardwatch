@@ -2,6 +2,7 @@ import { EnvelopeSimpleIcon, GithubLogoIcon } from "@phosphor-icons/react/dist/s
 import Link from "next/link";
 
 import { LogoMark } from "@/components/brand/logo";
+import { Reveal } from "@/components/motion/reveal";
 
 const AUTHOR_GITHUB = "https://github.com/HIRATRA";
 const AUTHOR_EMAIL = "hiratradanarson@gmail.com";
@@ -13,7 +14,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-white/10">
       <div className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-[1.5fr_1fr]">
-        <div className="max-w-sm">
+        <Reveal className="max-w-sm">
           <Link
             href="/"
             className="flex items-center gap-2.5 font-mono text-sm font-semibold tracking-widest uppercase"
@@ -25,34 +26,36 @@ export function SiteFooter() {
             Natural hazards worldwide, from open data. Data may be delayed or incomplete, so do not
             rely on it for emergency response.
           </p>
-        </div>
+        </Reveal>
 
-        <nav aria-label="Footer" className="grid grid-cols-2 gap-8 text-sm">
-          <ul className="flex flex-col gap-3">
-            <li>
-              <Link href="/map" className={linkClass}>
-                Live map
-              </Link>
-            </li>
-            <li>
-              <Link href="/zones" className={linkClass}>
-                Watch zones
-              </Link>
-            </li>
-          </ul>
-          <ul className="flex flex-col gap-3">
-            <li>
-              <a href={REPOSITORY} className={linkClass}>
-                Source code
-              </a>
-            </li>
-            <li>
-              <a href={`${REPOSITORY}/issues`} className={linkClass}>
-                Report an issue
-              </a>
-            </li>
-          </ul>
-        </nav>
+        <Reveal delay={0.15}>
+          <nav aria-label="Footer" className="grid grid-cols-2 gap-8 text-sm">
+            <ul className="flex flex-col gap-3">
+              <li>
+                <Link href="/map" className={linkClass}>
+                  Live map
+                </Link>
+              </li>
+              <li>
+                <Link href="/zones" className={linkClass}>
+                  Watch zones
+                </Link>
+              </li>
+            </ul>
+            <ul className="flex flex-col gap-3">
+              <li>
+                <a href={REPOSITORY} className={linkClass}>
+                  Source code
+                </a>
+              </li>
+              <li>
+                <a href={`${REPOSITORY}/issues`} className={linkClass}>
+                  Report an issue
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </Reveal>
       </div>
 
       <div className="border-t border-white/10">
