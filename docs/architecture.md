@@ -91,6 +91,12 @@ only integration point between the web app and the worker.
 - **Configuration.** Environment variables are validated with zod when the
   server starts. Server-only modules import `server-only` so they can never
   end up in a client bundle.
+- **Home page.** `/` is public and rendered on every request. It reads
+  the events active in the past 24 hours, counts them by kind and hands them
+  to a canvas that draws the planet as a seismogram: one line per band of
+  latitude, raised over land from a Natural Earth mask bundled with the app,
+  with a peak at every event. The feature tiles show NASA imagery fetched
+  by the browser. Without the database, the page renders without live data.
 - **Live map.** `/map` is public. The page reads its filters (hazard type,
   period and minimum severity) from the URL, queries the matching events
   active during the period, most recently active first and capped at
