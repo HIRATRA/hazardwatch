@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { fetchJson, HttpError } from "./http.js";
+import { fetchJson, fetchLastModified, fetchText, HttpError } from "./http.js";
 
 const url = "https://feeds.example.test/events.json";
 const neverAborted = () => new AbortController().signal;
@@ -51,5 +51,44 @@ describe("fetchJson", () => {
     controller.abort();
 
     await expect(request).rejects.toMatchObject({ name: "AbortError" });
+  });
+});
+
+describe("fetchText", () => {
+  it("returns the body as text", async () => {
+    const fetch = () => Promise.resolve(new Response("latitude,longitude\n1,2\n"));
+
+    await expect(fetchText(url, { signal: neverAborted(), fetch })).resolves.toBe(
+      "latitude,longitude\n1,2\n",
+    );
+  });
+});
+
+describe("fetchLastModified", () => {
+  it("reads the Last-Modified header of a HEAD request", async () => {
+    const fetch = vi.fn<typeof globalThis.fetch>(() =>
+      Promise.resolve(
+        new Response(null, { headers: { "last-modified": "Wed, 18 Nov 2026 11:40:18 GMT" } }),
+      ),
+    );
+
+    await expect(fetchLastModified(url, { signal: neverAborted(), fetch })).resolves.toBe(
+      "Wed, 18 Nov 2026 11:40:18 GMT",
+    );
+    expect(fetch.mock.calls[0]?.[1]?.method).toBe("HEAD");
+  });
+
+  it("resolves to null when the server does not say", async () => {
+    const fetch = () => Promise.resolve(new Response(null));
+
+    await expect(fetchLastModified(url, { signal: neverAborted(), fetch })).resolves.toBeNull();
+  });
+
+  it("names the method in errors", async () => {
+    const fetch = () => Promise.resolve(new Response(null, { status: 404 }));
+
+    await expect(fetchLastModified(url, { signal: neverAborted(), fetch })).rejects.toMatchObject({
+      message: `HEAD ${url} responded with 404`,
+    });
   });
 });
