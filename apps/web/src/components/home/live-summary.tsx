@@ -1,15 +1,8 @@
 import { hazardKinds, type HazardKind } from "@hazardwatch/db/constants";
 
-import { LiveSentence } from "./live-sentence";
+import { hazardKindNouns } from "@/lib/events/format";
 
-const nouns: Record<HazardKind, { one: string; other: string }> = {
-  earthquake: { one: "earthquake", other: "earthquakes" },
-  wildfire: { one: "wildfire", other: "wildfires" },
-  tropical_cyclone: { one: "tropical cyclone", other: "tropical cyclones" },
-  flood: { one: "flood", other: "floods" },
-  volcano: { one: "volcano", other: "volcanoes" },
-  drought: { one: "drought", other: "droughts" },
-};
+import { LiveSentence } from "./live-sentence";
 
 interface LiveSummaryProps {
   /** Events active in the past 24 hours, by kind. */
@@ -23,7 +16,7 @@ export function LiveSummary({ counts }: LiveSummaryProps) {
     .filter(({ count }) => count > 0)
     .map(({ kind, count }) => ({
       count,
-      label: count === 1 ? nouns[kind].one : nouns[kind].other,
+      label: count === 1 ? hazardKindNouns[kind].one : hazardKindNouns[kind].other,
     }));
   if (items.length === 0) {
     return null;
