@@ -4,6 +4,8 @@ import {
   basemapImagery,
   basemapPreviewUrl,
   fetchLatestImageTime,
+  coastlinesLayer,
+  fireDetectionsLayer,
   gibsImageUrl,
   gibsTileUrl,
   goesEastLayer,
@@ -139,6 +141,21 @@ describe("basemapPreviewUrl", () => {
 });
 
 describe("gibsImageUrl", () => {
+  it("stacks several layers, the first at the bottom", () => {
+    const url = new URL(
+      gibsImageUrl([trueColorLayer, fireDetectionsLayer, coastlinesLayer], {
+        bounds: [5, 19, 8, 23],
+        time: "2026-11-18",
+        width: 640,
+        height: 400,
+      }),
+    );
+
+    expect(url.searchParams.get("LAYERS")).toBe(
+      "VIIRS_NOAA20_CorrectedReflectance_TrueColor,VIIRS_NOAA20_Thermal_Anomalies_375m_All,Coastlines_15m",
+    );
+  });
+
   it("asks the WMS service for one image of the area, latitude first", () => {
     const url = new URL(
       gibsImageUrl(nightLightsLayer, {

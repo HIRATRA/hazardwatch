@@ -51,6 +51,9 @@ key.
 - **Readable at any zoom.** Events merge into clusters coloured by their
   most severe event, fires glow as a heatmap, and events that started in
   the past six hours pulse.
+- **Every event seen from orbit.** Its card shows the area around it as
+  NOAA-20 pictured it on its last day of activity, with fires in red, and
+  steps back and forth in days.
 - **Shareable views.** Filters by type, period and severity live in the URL,
   so any view can be bookmarked or sent.
 
