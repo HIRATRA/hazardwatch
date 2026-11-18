@@ -201,18 +201,19 @@ const GIBS_WMS_URL = "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi"
 export type Bounds = readonly [south: number, west: number, north: number, east: number];
 
 /**
- * URL of a single image of a GIBS layer over an area, in latitude and
- * longitude, for pages that show a still picture rather than a map.
+ * URL of a single image of GIBS layers over an area, in latitude and
+ * longitude, for pages that show a still picture rather than a map. Several
+ * layers are drawn in order, the first at the bottom.
  */
 export function gibsImageUrl(
-  layer: GibsLayer,
+  layers: Pick<GibsLayer, "id"> | readonly Pick<GibsLayer, "id">[],
   { bounds, time, width, height }: { bounds: Bounds; time: string; width: number; height: number },
 ): string {
   const query = new URLSearchParams({
     SERVICE: "WMS",
     REQUEST: "GetMap",
     VERSION: "1.3.0",
-    LAYERS: layer.id,
+    LAYERS: ("id" in layers ? [layers] : layers).map((layer) => layer.id).join(","),
     STYLES: "",
     CRS: "EPSG:4326",
     // WMS 1.3.0 orders EPSG:4326 coordinates latitude first.
@@ -224,6 +225,12 @@ export function gibsImageUrl(
   });
   return `${GIBS_WMS_URL}?${query.toString()}`;
 }
+
+/** Fires and other heat sources detected by VIIRS on NOAA-20, as red dots. */
+export const fireDetectionsLayer = { id: "VIIRS_NOAA20_Thermal_Anomalies_375m_All" } as const;
+
+/** Coastlines, as a thin line. */
+export const coastlinesLayer = { id: "Coastlines_15m" } as const;
 
 /** Time GIBS replaces with that of the latest image of a layer. */
 export const latestImageTime = LATEST_TIME;
