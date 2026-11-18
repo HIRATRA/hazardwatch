@@ -8,13 +8,19 @@ interface SiteHeaderProps {
   children?: ReactNode;
   /** Span the whole viewport instead of the centred content column. */
   fullWidth?: boolean;
+  /**
+   * Float over the top of the page, without a border, in the wide column of
+   * the home page.
+   */
+  overlay?: boolean;
 }
 
-export function SiteHeader({ children, fullWidth = false }: SiteHeaderProps) {
+export function SiteHeader({ children, fullWidth = false, overlay = false }: SiteHeaderProps) {
+  const column = fullWidth ? "" : overlay ? "mx-auto max-w-7xl" : "mx-auto max-w-5xl";
   return (
-    <header className="border-border border-b">
+    <header className={overlay ? "absolute inset-x-0 top-0 z-10" : "border-border border-b"}>
       <div
-        className={`flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-4 ${fullWidth ? "" : "mx-auto max-w-5xl"}`}
+        className={`flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-4 ${column}`}
       >
         {/* On narrow screens the account actions wrap below the navigation. */}
         <div className="flex items-center gap-6">

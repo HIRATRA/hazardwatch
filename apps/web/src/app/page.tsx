@@ -1,73 +1,64 @@
-import Link from "next/link";
+import type { HazardKind } from "@hazardwatch/db/constants";
+import { hazardSeverities } from "@hazardwatch/db/constants";
+import { connection } from "next/server";
 
-import { GuestActions, SiteHeader } from "@/components/layout/site-header";
+import { Closing } from "@/components/home/closing";
+import { Features } from "@/components/home/features";
+import { Hero } from "@/components/home/hero";
+import { LiveSummary } from "@/components/home/live-summary";
+import type { EarthEvent } from "@/components/home/seismic-earth";
+import { Sources } from "@/components/home/sources";
+import { AccountActions } from "@/components/layout/account-actions";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { SiteHeader } from "@/components/layout/site-header";
+import { isRecent } from "@/lib/events/geojson";
+import { listEvents } from "@/lib/events/queries";
+import type { MapEvent } from "@/lib/events/types";
 
-const features = [
-  {
-    title: "Live hazard map",
-    body: "Wildfires, earthquakes, tropical cyclones and floods from open data feeds, refreshed continuously.",
-  },
-  {
-    title: "Watch zones",
-    body: "Pick the places that matter to you, such as sites, cities or suppliers, and follow the hazards around them.",
-  },
-  {
-    title: "Instant alerts",
-    body: "Get an alert in the app and by email as soon as an event reaches one of your zones, from the severity you choose.",
-  },
-];
+/** Events active in the past day, or none when the database cannot be reached. */
+async function loadRecentEvents(now: Date): Promise<MapEvent[]> {
+  try {
+    const { events } = await listEvents({ kind: null, window: "24h", severity: "minor" }, { now });
+    return events;
+  } catch (error) {
+    // The page still makes sense without live data, so it renders anyway.
+    console.error("Could not load events for the home page", error);
+    return [];
+  }
+}
 
-export default function HomePage() {
+const roundTenth = (value: number) => Math.round(value * 10) / 10;
+
+export default async function HomePage() {
+  // Live data: render on every request.
+  await connection();
+  const now = new Date();
+  const events = await loadRecentEvents(now);
+
+  const peaks: EarthEvent[] = events.map((event) => [
+    roundTenth(event.longitude),
+    roundTenth(event.latitude),
+    hazardSeverities.indexOf(event.severity),
+    isRecent(event, now) ? 1 : 0,
+  ]);
+  const counts: Partial<Record<HazardKind, number>> = {};
+  for (const event of events) {
+    counts[event.kind] = (counts[event.kind] ?? 0) + 1;
+  }
+
   return (
-    <div className="flex min-h-dvh flex-col">
-      <SiteHeader>
-        <GuestActions />
+    <div className="bg-ink relative min-h-dvh">
+      <SiteHeader overlay>
+        <AccountActions />
       </SiteHeader>
-
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-6 py-24">
-        <p className="text-accent font-mono text-xs tracking-widest uppercase">
-          Open-source hazard intelligence
-        </p>
-        <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
-          Know when disaster strikes near what matters to you.
-        </h1>
-        <p className="text-muted mt-6 max-w-2xl text-lg text-pretty">
-          HazardWatch aggregates public data on natural hazards worldwide, plots it on a live map,
-          and alerts you the moment an event reaches your watch zones.
-        </p>
-        <div className="mt-10 flex flex-wrap gap-3">
-          <Link
-            href="/map"
-            className="bg-accent hover:bg-accent-strong rounded-md px-4 py-2 text-sm font-medium text-neutral-950"
-          >
-            Open the live map
-          </Link>
-          <Link
-            href="/sign-up"
-            className="border-border hover:bg-surface-raised rounded-md border px-4 py-2 text-sm font-medium"
-          >
-            Create an account
-          </Link>
-        </div>
-
-        <ul className="mt-16 grid gap-4 sm:grid-cols-3">
-          {features.map((feature) => (
-            <li
-              key={feature.title}
-              className="border-border bg-surface-raised rounded-lg border p-5"
-            >
-              <h2 className="font-medium">{feature.title}</h2>
-              <p className="text-muted mt-2 text-sm">{feature.body}</p>
-            </li>
-          ))}
-        </ul>
+      <main>
+        <Hero events={peaks} />
+        <LiveSummary counts={counts} />
+        <Features />
+        <Sources />
+        <Closing />
       </main>
-
-      <footer className="border-border text-muted border-t">
-        <p className="mx-auto max-w-5xl px-6 py-6 text-xs">
-          Data may be delayed or incomplete. Do not use for emergency response.
-        </p>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
