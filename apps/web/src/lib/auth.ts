@@ -8,10 +8,12 @@ import { nextCookies } from "better-auth/next-js";
 
 import { db } from "./db";
 import { mailer } from "./email";
-import { env } from "./env";
+import { env, previewOrigins } from "./env";
 
 export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
+  // A preview answers on its branch URL and on its own, both allowed to sign in.
+  trustedOrigins: previewOrigins,
   secret: env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {
     provider: "pg",
