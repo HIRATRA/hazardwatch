@@ -241,6 +241,86 @@ describe("alerts", () => {
   });
 });
 
+describe("windowed sources", () => {
+  /** Fire activity 20 km south of Lisbon, as a 24-hour window shows it. */
+  function fire(occurredAt: Date, activeUntil: Date): IngestedEvent {
+    return earthquake({
+      source: "nasa_firms",
+      externalId: "cell-516-2333",
+      kind: "wildfire",
+      title: "Fire seen by satellite",
+      occurredAt,
+      activeUntil,
+      sourceUpdatedAt: null,
+    });
+  }
+
+  async function storedPeriod() {
+    const [event] = await db.select().from(hazardEvents);
+    return { occurredAt: event?.occurredAt, activeUntil: event?.activeUntil };
+  }
+
+  it("keeps the start of an event that goes on", async () => {
+    const start = hoursAgo(30);
+    await repository.upsertEvents([fire(start, hoursAgo(10))], { windowed: true });
+
+    // The window moved on and no longer shows the first detections.
+    const end = hoursAgo(1);
+    await repository.upsertEvents([fire(hoursAgo(20), end)], { windowed: true });
+
+    expect(await storedPeriod()).toEqual({ occurredAt: start, activeUntil: end });
+  });
+
+  it("starts the event again after a long silence", async () => {
+    await repository.upsertEvents([fire(hoursAgo(24 * 30), hoursAgo(24 * 29))], {
+      windowed: true,
+    });
+
+    const restart = hoursAgo(5);
+    await repository.upsertEvents([fire(restart, hoursAgo(1))], { windowed: true });
+
+    expect((await storedPeriod()).occurredAt).toEqual(restart);
+  });
+
+  it("takes the reported start as is from other sources", async () => {
+    await repository.upsertEvents([fire(hoursAgo(30), hoursAgo(10))]);
+
+    const reported = hoursAgo(20);
+    await repository.upsertEvents([fire(reported, hoursAgo(1))]);
+
+    expect((await storedPeriod()).occurredAt).toEqual(reported);
+  });
+
+  it("raises the alert once while the event goes on", async () => {
+    await createZone();
+    await repository.upsertEvents([fire(hoursAgo(30), hoursAgo(10))], { windowed: true });
+
+    const result = await repository.upsertEvents([fire(hoursAgo(20), hoursAgo(1))], {
+      windowed: true,
+    });
+
+    expect(result.alertsRaised).toBe(0);
+  });
+
+  it("raises the alert again, unread, when the event starts again", async () => {
+    await createZone();
+    await repository.upsertEvents([fire(hoursAgo(5), hoursAgo(1))], { windowed: true });
+    // Ten days pass: the alert is read and the fire died down.
+    await db.update(zoneAlerts).set({ raisedAt: hoursAgo(24 * 10), readAt: hoursAgo(24 * 10) });
+    await db
+      .update(hazardEvents)
+      .set({ occurredAt: hoursAgo(24 * 11), activeUntil: hoursAgo(24 * 10) });
+
+    const result = await repository.upsertEvents([fire(hoursAgo(3), hoursAgo(1))], {
+      windowed: true,
+    });
+
+    expect(result.alertsRaised).toBe(1);
+    const [alert] = await db.select().from(zoneAlerts);
+    expect(alert?.readAt).toBeNull();
+  });
+});
+
 describe("runs", () => {
   it("records the outcome of a run", async () => {
     const runId = await repository.startRun("usgs");

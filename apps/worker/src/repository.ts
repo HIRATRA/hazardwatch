@@ -24,6 +24,13 @@ const UPSERT_BATCH_SIZE = 500;
  */
 const ALERT_GRACE_PERIOD = sql`interval '1 day'`;
 
+/**
+ * Longest silence within one event of a windowed source. Activity seen after
+ * a longer gap starts the event again, which raises its alerts again. Clouds
+ * can hide a fire from satellites for a day or so.
+ */
+const EPISODE_GAP = sql`interval '2 days'`;
+
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
 export interface RunResult {
@@ -47,7 +54,12 @@ export interface IngestionRepository {
    * Inserts new events and updates revised ones, then raises alerts for the
    * watch zones they reach, in the same transaction so that no alert is lost.
    */
-  upsertEvents(events: readonly IngestedEvent[]): Promise<UpsertResult>;
+  upsertEvents(events: readonly IngestedEvent[], options?: UpsertOptions): Promise<UpsertResult>;
+}
+
+export interface UpsertOptions {
+  /** The events come from a windowed source, see `Source.windowed`. */
+  windowed?: boolean;
 }
 
 export function createIngestionRepository(db: Database): IngestionRepository {
@@ -75,12 +87,12 @@ export function createIngestionRepository(db: Database): IngestionRepository {
         .where(eq(ingestionRuns.id, runId));
     },
 
-    async upsertEvents(events) {
+    async upsertEvents(events, { windowed = false } = {}) {
       const total: UpsertResult = { eventsUpserted: 0, alertsRaised: 0 };
       for (let start = 0; start < events.length; start += UPSERT_BATCH_SIZE) {
         const batch = events.slice(start, start + UPSERT_BATCH_SIZE);
         const result = await db.transaction(async (tx) => {
-          const eventIds = await writeEvents(tx, batch);
+          const eventIds = await writeEvents(tx, batch, windowed);
           return { eventsUpserted: eventIds.length, alertsRaised: await raiseAlerts(tx, eventIds) };
         });
         total.eventsUpserted += result.eventsUpserted;
@@ -92,7 +104,11 @@ export function createIngestionRepository(db: Database): IngestionRepository {
 }
 
 /** Upserts a batch of events and resolves to the ids of the rows written. */
-async function writeEvents(tx: Transaction, events: readonly IngestedEvent[]): Promise<string[]> {
+async function writeEvents(
+  tx: Transaction,
+  events: readonly IngestedEvent[],
+  windowed: boolean,
+): Promise<string[]> {
   const rows = await tx
     .insert(hazardEvents)
     .values([...events])
@@ -105,7 +121,15 @@ async function writeEvents(tx: Transaction, events: readonly IngestedEvent[]): P
         url: sql`excluded.url`,
         location: sql`excluded.location`,
         properties: sql`excluded.properties`,
-        occurredAt: sql`excluded.occurred_at`,
+        occurredAt: windowed
+          ? // The window only shows the recent part of an ongoing event: keep
+            // its start, unless it went quiet long enough to count as new.
+            sql`case
+                when ${hazardEvents.activeUntil} >= excluded.occurred_at - ${EPISODE_GAP}
+                  then least(${hazardEvents.occurredAt}, excluded.occurred_at)
+                else excluded.occurred_at
+              end`
+          : sql`excluded.occurred_at`,
         activeUntil: sql`excluded.active_until`,
         sourceUpdatedAt: sql`excluded.source_updated_at`,
         updatedAt: sql`now()`,
@@ -123,8 +147,8 @@ async function writeEvents(tx: Transaction, events: readonly IngestedEvent[]): P
  * Raises an alert for every watch zone that one of the given events reaches
  * at or above the zone's threshold, as long as the event is still going on
  * or ended recently. An alert is raised once per zone and event, and again,
- * unread, if the event becomes more severe. Resolves to the number of alerts
- * raised.
+ * unread, if the event becomes more severe or starts again. Resolves to the
+ * number of alerts raised.
  */
 async function raiseAlerts(tx: Transaction, eventIds: readonly string[]): Promise<number> {
   if (eventIds.length === 0) {
@@ -167,7 +191,13 @@ async function raiseAlerts(tx: Transaction, eventIds: readonly string[]): Promis
         readAt: null,
         emailedAt: null,
       },
-      setWhere: sql`excluded.severity > ${zoneAlerts.severity}`,
+      // Only when the event grew more severe, or started again after the
+      // alert, as a windowed source reports for a fire that flares up anew.
+      setWhere: sql`excluded.severity > ${zoneAlerts.severity}
+        or ${zoneAlerts.raisedAt} < (
+          select ${hazardEvents.occurredAt} from ${hazardEvents}
+          where ${hazardEvents.id} = excluded.event_id
+        )`,
     })
     .returning({ id: zoneAlerts.id });
   return raised.length;

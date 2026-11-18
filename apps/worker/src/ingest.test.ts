@@ -2,7 +2,7 @@ import { pino } from "pino";
 import { describe, expect, it, vi } from "vitest";
 
 import { ingestSource } from "./ingest.js";
-import type { IngestionRepository, RunResult } from "./repository.js";
+import type { IngestionRepository, RunResult, UpsertOptions } from "./repository.js";
 import type { IngestedEvent, Source } from "./sources/index.js";
 
 const logger = pino({ level: "silent" });
@@ -20,7 +20,7 @@ const event: IngestedEvent = {
 
 function createFakeRepository() {
   const finished: RunResult[] = [];
-  const upsertEvents = vi.fn((events: readonly IngestedEvent[]) =>
+  const upsertEvents = vi.fn((events: readonly IngestedEvent[], _options?: UpsertOptions) =>
     Promise.resolve({ eventsUpserted: events.length, alertsRaised: 0 }),
   );
   const repository: IngestionRepository = {
@@ -46,8 +46,17 @@ describe("ingestSource", () => {
     const result = await ingestSource(source, { repository, logger }, new AbortController().signal);
 
     expect(result).toEqual({ status: "succeeded", eventsUpserted: 1 });
-    expect(upsertEvents).toHaveBeenCalledWith([event]);
+    expect(upsertEvents).toHaveBeenCalledWith([event], { windowed: false });
     expect(finished).toEqual([{ status: "succeeded", eventsUpserted: 1 }]);
+  });
+
+  it("tells the repository when the source only covers a recent window", async () => {
+    const { repository, upsertEvents } = createFakeRepository();
+    const source = { ...createSource(() => Promise.resolve([event])), windowed: true };
+
+    await ingestSource(source, { repository, logger }, new AbortController().signal);
+
+    expect(upsertEvents).toHaveBeenCalledWith([event], { windowed: true });
   });
 
   it("records a failed run instead of throwing when the feed errors", async () => {
