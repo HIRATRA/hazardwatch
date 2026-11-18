@@ -37,6 +37,12 @@ describe("loadConfig", () => {
     });
   });
 
+  it("reads the port of the health endpoint, when there is one", () => {
+    expect(loadConfig({ DATABASE_URL }).PORT).toBeUndefined();
+    expect(loadConfig({ DATABASE_URL, PORT: "10000" }).PORT).toBe(10_000);
+    expect(() => loadConfig({ DATABASE_URL, PORT: "http" })).toThrow(/PORT/);
+  });
+
   it("requires the app URL to send email", () => {
     expect(() => loadConfig({ DATABASE_URL, SMTP_URL: "smtp://localhost:1025" })).toThrow(
       /APP_URL is required to send email/,

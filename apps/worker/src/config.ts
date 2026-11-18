@@ -19,6 +19,11 @@ const configSchema = z
     ),
     /** Public URL of the web application, for the links in emails. */
     APP_URL: unsetIfEmpty(z.url({ protocol: /^https?$/ }).optional()),
+    /**
+     * Port of the health endpoint, which hosts that run the worker as a web
+     * service require. Without it, the worker opens no port.
+     */
+    PORT: unsetIfEmpty(z.coerce.number().int().min(0).max(65_535).optional()),
   })
   .refine((config) => !config.SMTP_URL || config.APP_URL, {
     message: "APP_URL is required to send email, for the links it contains",

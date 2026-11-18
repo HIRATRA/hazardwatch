@@ -4,6 +4,7 @@ import { createMailer } from "@hazardwatch/email";
 import { createAlertEmailRepository } from "./alerts/email-repository.js";
 import { ALERT_EMAIL_INTERVAL_MS, emailPendingAlerts } from "./alerts/notifier.js";
 import { loadConfig } from "./config.js";
+import { startHealthServer } from "./health.js";
 import { createLogger } from "./logger.js";
 import { createIngestionRepository } from "./repository.js";
 import { repeatEvery, runScheduler } from "./scheduler.js";
@@ -48,10 +49,16 @@ async function runAlertEmails(): Promise<void> {
   );
 }
 
+const health = config.PORT === undefined ? null : await startHealthServer(config.PORT);
+if (health) {
+  logger.info({ port: health.port }, "health endpoint listening");
+}
+
 logger.info({ sources: sources.map((source) => source.id) }, "worker started");
 await Promise.all([
   runScheduler(sources, { repository, logger }, controller.signal),
   runAlertEmails(),
 ]);
+await health?.close();
 await db.$client.end({ timeout: 5 });
 logger.info("worker stopped");
