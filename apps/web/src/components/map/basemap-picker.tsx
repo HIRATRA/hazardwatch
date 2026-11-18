@@ -103,6 +103,7 @@ export function BasemapPicker({
       {open && (
         <fieldset
           id={panelId}
+          data-lenis-prevent
           className="border-border bg-surface/95 w-72 max-w-[calc(100vw-1.5rem)] rounded-lg border p-1.5 shadow-xl backdrop-blur motion-safe:transition motion-safe:duration-200 motion-safe:starting:-translate-y-1 motion-safe:starting:opacity-0"
         >
           <legend className="sr-only">Basemap</legend>

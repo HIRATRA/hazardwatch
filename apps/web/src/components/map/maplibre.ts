@@ -50,6 +50,8 @@ export function createMap(
     attributionControl: { compact: true },
     ...options,
   });
+  // Smooth scrolling leaves the wheel to the map, which zooms with it.
+  container.dataset.lenisPrevent = "";
   map.addControl(new NavigationControl({ showCompass: false }), "bottom-right");
 
   // The style does not set a projection, and loading it again after a lost
