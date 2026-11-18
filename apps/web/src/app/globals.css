@@ -22,3 +22,20 @@
     @apply bg-surface font-sans text-neutral-100 antialiased;
   }
 }
+
+/*
+ * Tooltip naming the event under the pointer on the map. MapLibre's own
+ * stylesheet is unlayered, so these rules are too, with a more specific
+ * selector. The tooltip lets the pointer through to the map below.
+ */
+.hazard-tooltip {
+  pointer-events: none;
+}
+
+.hazard-tooltip .maplibregl-popup-content {
+  @apply border-border bg-surface/95 rounded-md border px-2.5 py-1.5 text-xs text-neutral-100 shadow-lg backdrop-blur;
+}
+
+.hazard-tooltip .maplibregl-popup-tip {
+  display: none;
+}

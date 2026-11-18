@@ -101,6 +101,10 @@ only integration point between the web app and the worker.
   minutes, or city lights at night (see [ADR 0012](adr/0012-show-the-map-as-a-globe-with-nasa-imagery.md)).
   The browser fetches the imagery from NASA directly and remembers the
   chosen basemap.
+  Events merge into clusters, coloured by their most severe event, until
+  the map shows about a country. Fires add their heat below the markers, and
+  events that started in the past six hours pulse, still for users who
+  prefer reduced motion.
   Changing a filter navigates to a new URL, and the page calls
   `router.refresh()` every minute while visible. Both re-render on the
   server and keep client state such as the map position and the selected

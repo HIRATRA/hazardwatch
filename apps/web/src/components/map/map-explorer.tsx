@@ -12,7 +12,7 @@ import { BasemapPicker } from "./basemap-picker";
 import { EventDetails } from "./event-details";
 import { EventList } from "./event-list";
 import { MapFilters } from "./map-filters";
-import { SeverityLegend } from "./severity";
+import { MapLegend } from "./map-legend";
 import { useAutoRefresh } from "./use-auto-refresh";
 import { useBasemap } from "./use-basemap";
 import { useLiveImageTimes } from "./use-live-image-times";
@@ -78,6 +78,7 @@ export function MapExplorer({
       <section aria-label="Map" className="relative order-1 min-h-0 flex-1 md:order-2">
         <HazardMap
           events={events}
+          now={generatedAt}
           selectedId={activeId}
           onSelect={setSelectedId}
           zone={zone}
@@ -90,7 +91,7 @@ export function MapExplorer({
           liveTimes={liveTimes}
           className="absolute top-3 right-3 z-10"
         />
-        <SeverityLegend className="absolute bottom-3 left-3 hidden sm:block" />
+        <MapLegend className="absolute bottom-3 left-3 hidden sm:block" />
         {selectedEvent && (
           <EventDetails
             event={selectedEvent}
