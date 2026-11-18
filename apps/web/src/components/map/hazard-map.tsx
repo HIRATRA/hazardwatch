@@ -176,8 +176,9 @@ export function HazardMap({ events, selectedId, onSelect, zone }: HazardMapProps
 
   // MapLibre's unlayered stylesheet forces `position: relative` on the map
   // container, which beats Tailwind utilities, so positioning lives on a wrapper.
+  // The globe leaves the canvas transparent around it, showing the space below.
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 bg-[#05070d] bg-[radial-gradient(ellipse_at_center,#0d1626_0%,#05070d_70%)]">
       <div ref={containerRef} className="size-full" />
     </div>
   );
