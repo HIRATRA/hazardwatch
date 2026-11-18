@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { LogoMark } from "@/components/brand/logo";
 
@@ -13,12 +13,24 @@ interface SiteHeaderProps {
    * the home page.
    */
   overlay?: boolean;
+  /** Extra classes for the header element, such as an entrance animation. */
+  className?: string;
+  style?: CSSProperties;
 }
 
-export function SiteHeader({ children, fullWidth = false, overlay = false }: SiteHeaderProps) {
+export function SiteHeader({
+  children,
+  fullWidth = false,
+  overlay = false,
+  className = "",
+  style,
+}: SiteHeaderProps) {
   const column = fullWidth ? "" : overlay ? "mx-auto max-w-7xl" : "mx-auto max-w-5xl";
   return (
-    <header className={overlay ? "absolute inset-x-0 top-0 z-10" : "border-border border-b"}>
+    <header
+      className={`${overlay ? "absolute inset-x-0 top-0 z-10" : "border-border border-b"} ${className}`}
+      style={style}
+    >
       <div
         className={`flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-6 py-4 ${column}`}
       >

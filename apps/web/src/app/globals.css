@@ -43,10 +43,10 @@
 }
 
 /*
- * Motion of the home page: the hero rises in, headline words slide out of
- * their line, and sections fade up as they scroll into view, where the
- * browser supports scroll-driven animations. Without motion, everything
- * simply shows.
+ * Entrance of the home page hero, which plays before scripts load: the hero
+ * rises in and headline words slide out of their line. Sections further
+ * down animate with Motion as they scroll into view. Without motion,
+ * everything simply shows.
  */
 @media (prefers-reduced-motion: no-preference) {
   .rise-in {
@@ -60,17 +60,20 @@
     animation-delay: calc(150ms + var(--index, 0) * 70ms);
   }
 
+  /* Rows of the map's event list, gliding in one after the other. */
+  .list-in {
+    animation: list-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--index, 0) * 25ms);
+  }
+
+  .select-content[data-state="open"] {
+    transform-origin: var(--radix-select-content-transform-origin);
+    animation: select-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
   .signal-ring {
     animation: signal-ring 3.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
     animation-delay: calc(var(--delay, 0) * 1ms);
-  }
-
-  @supports (animation-timeline: view()) {
-    .reveal {
-      animation: rise-in linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 60%;
-    }
   }
 }
 
@@ -78,6 +81,20 @@
   from {
     opacity: 0;
     transform: translateY(28px);
+  }
+}
+
+@keyframes list-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes select-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
   }
 }
 
@@ -95,5 +112,42 @@
   to {
     opacity: 0;
     transform: scale(1);
+  }
+}
+
+/*
+ * Scrollbars: a thin rail with a soft thumb that brightens on hover and
+ * takes the accent colour while dragged. Firefox only knows the standard
+ * properties, which Chromium would otherwise prefer over these.
+ */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 9999px;
+  background-color: color-mix(in oklch, white 16%, transparent);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in oklch, white 30%, transparent);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: var(--color-accent);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, white 22%, transparent) transparent;
   }
 }

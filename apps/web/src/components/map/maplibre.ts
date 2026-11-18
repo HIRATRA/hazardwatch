@@ -2,7 +2,6 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 import {
   Map as MapLibreMap,
-  NavigationControl,
   setWorkerUrl,
   type MapOptions,
   type SkySpecification,
@@ -26,6 +25,9 @@ const SKY: SkySpecification = {
   "atmosphere-blend": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 1, 7, 0],
 };
 
+/** Longitude and latitude in the middle of the whole globe view. */
+const WORLD_CENTER: [number, number] = [10, 20];
+
 /** Zoom at which the globe fills most of the container, whatever its size. */
 function wholeGlobeZoom(container: HTMLElement): number {
   const size = Math.min(container.clientWidth, container.clientHeight);
@@ -45,12 +47,13 @@ export function createMap(
   const map = new MapLibreMap({
     container,
     style: STYLE_URL,
-    center: [10, 20],
+    center: WORLD_CENTER,
     zoom: wholeGlobeZoom(container),
     attributionControl: { compact: true },
     ...options,
   });
-  map.addControl(new NavigationControl({ showCompass: false }), "bottom-right");
+  // Smooth scrolling leaves the wheel to the map, which zooms with it.
+  container.dataset.lenisPrevent = "";
 
   // The style does not set a projection, and loading it again after a lost
   // WebGL context resets the projection and the sky.
@@ -59,4 +62,15 @@ export function createMap(
     map.setSky(SKY);
   });
   return map;
+}
+
+/** Turns the map back to the whole globe, upright. */
+export function showWholeGlobe(map: MapLibreMap) {
+  map.easeTo({
+    center: WORLD_CENTER,
+    zoom: wholeGlobeZoom(map.getContainer()),
+    bearing: 0,
+    pitch: 0,
+    duration: 1200,
+  });
 }

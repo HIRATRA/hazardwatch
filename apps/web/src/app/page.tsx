@@ -1,6 +1,7 @@
 import type { HazardKind } from "@hazardwatch/db/constants";
 import { hazardSeverities } from "@hazardwatch/db/constants";
 import { connection } from "next/server";
+import type { CSSProperties } from "react";
 
 import { Closing } from "@/components/home/closing";
 import { Features } from "@/components/home/features";
@@ -48,7 +49,7 @@ export default async function HomePage() {
 
   return (
     <div className="bg-ink relative min-h-dvh">
-      <SiteHeader overlay>
+      <SiteHeader overlay className="rise-in" style={{ "--delay": 900 } as CSSProperties}>
         <AccountActions />
       </SiteHeader>
       <main>
