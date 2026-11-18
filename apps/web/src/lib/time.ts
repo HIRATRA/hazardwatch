@@ -28,6 +28,13 @@ export function formatUtc(date: Date): string {
   return `${utcFormat.format(date)} UTC`;
 }
 
+const utcTimeFormat = new Intl.DateTimeFormat("en", { timeStyle: "short", timeZone: "UTC" });
+
+/** Time of day in UTC: "4:16 PM UTC". */
+export function formatUtcTime(date: Date): string {
+  return `${utcTimeFormat.format(date)} UTC`;
+}
+
 const dayFormat = new Intl.DateTimeFormat("en", {
   month: "short",
   day: "numeric",
