@@ -1,17 +1,21 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import type { EventFilters } from "@/lib/events/filters";
 import type { EventsResult } from "@/lib/events/queries";
+import { basemapImagery } from "@/lib/imagery";
 import type { ZoneShape } from "@/lib/zones/types";
 
+import { BasemapPicker } from "./basemap-picker";
 import { EventDetails } from "./event-details";
 import { EventList } from "./event-list";
 import { MapFilters } from "./map-filters";
 import { SeverityLegend } from "./severity";
 import { useAutoRefresh } from "./use-auto-refresh";
+import { useBasemap } from "./use-basemap";
+import { useLiveImageTimes } from "./use-live-image-times";
 
 /** The workers poll their feeds every minute, so refreshing faster brings nothing. */
 const REFRESH_INTERVAL_MS = 60_000;
@@ -44,6 +48,13 @@ export function MapExplorer({
   const clearSelection = useCallback(() => setSelectedId(null), []);
   useAutoRefresh(REFRESH_INTERVAL_MS);
 
+  const [basemap, setBasemap] = useBasemap();
+  const liveTimes = useLiveImageTimes(basemap === "live");
+  const imagery = useMemo(
+    () => basemapImagery(basemap, { now: new Date(generatedAt), liveTimes }),
+    [basemap, generatedAt, liveTimes],
+  );
+
   // The selection is dropped implicitly when a refresh or a filter removes the event.
   const selectedEvent = events.find((event) => event.id === selectedId) ?? null;
   const activeId = selectedEvent?.id ?? null;
@@ -65,7 +76,20 @@ export function MapExplorer({
       </aside>
 
       <section aria-label="Map" className="relative order-1 min-h-0 flex-1 md:order-2">
-        <HazardMap events={events} selectedId={activeId} onSelect={setSelectedId} zone={zone} />
+        <HazardMap
+          events={events}
+          selectedId={activeId}
+          onSelect={setSelectedId}
+          zone={zone}
+          imagery={imagery}
+        />
+        <BasemapPicker
+          value={basemap}
+          onChange={setBasemap}
+          now={generatedAt}
+          liveTimes={liveTimes}
+          className="absolute top-3 right-3 z-10"
+        />
         <SeverityLegend className="absolute bottom-3 left-3 hidden sm:block" />
         {selectedEvent && (
           <EventDetails

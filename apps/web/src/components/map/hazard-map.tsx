@@ -10,9 +10,11 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { toFeatureCollection } from "@/lib/events/geojson";
 import type { MapEvent } from "@/lib/events/types";
+import type { ImageryTiles } from "@/lib/imagery";
 import { zoneBounds } from "@/lib/zones/geometry";
 import type { ZoneShape } from "@/lib/zones/types";
 
+import { setImagery } from "./imagery-layers";
 import { createMap } from "./maplibre";
 import { severityStyles } from "./severity";
 import { addZoneLayers } from "./zone-layers";
@@ -60,6 +62,8 @@ interface HazardMapProps {
    * read once, when the map is created.
    */
   zone?: ZoneShape | undefined;
+  /** Satellite imagery drawn below borders, place names and events. */
+  imagery: readonly ImageryTiles[];
 }
 
 /**
@@ -68,16 +72,16 @@ interface HazardMapProps {
  * The map instance is created once and updated imperatively when props
  * change, so React re-renders never rebuild the WebGL context.
  */
-export function HazardMap({ events, selectedId, onSelect, zone }: HazardMapProps) {
+export function HazardMap({ events, selectedId, onSelect, zone, imagery }: HazardMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
 
   const data = useMemo(() => toFeatureCollection(events), [events]);
 
   // Latest values for handlers registered once, when the map is created.
-  const latest = useRef({ data, events, selectedId, onSelect, zone });
+  const latest = useRef({ data, events, selectedId, onSelect, zone, imagery });
   useEffect(() => {
-    latest.current = { data, events, selectedId, onSelect, zone };
+    latest.current = { data, events, selectedId, onSelect, zone, imagery };
   });
 
   useEffect(() => {
@@ -96,6 +100,7 @@ export function HazardMap({ events, selectedId, onSelect, zone }: HazardMapProps
     // Fired before tiles arrive, and again when the style is rebuilt after a
     // lost WebGL context, which drops every source and layer added here.
     map.on("style.load", () => {
+      setImagery(map, latest.current.imagery);
       if (initialZone) {
         addZoneLayers(map, initialZone);
       }
@@ -157,6 +162,14 @@ export function HazardMap({ events, selectedId, onSelect, zone }: HazardMapProps
 
   useEffect(() => {
     const map = mapRef.current;
+    // Before the style loads, its handler draws the latest imagery.
+    if (map?.getLayer(EVENTS_LAYER_ID)) {
+      setImagery(map, imagery);
+    }
+  }, [imagery]);
+
+  useEffect(() => {
+    const map = mapRef.current;
     if (!map) {
       return;
     }
@@ -176,8 +189,9 @@ export function HazardMap({ events, selectedId, onSelect, zone }: HazardMapProps
 
   // MapLibre's unlayered stylesheet forces `position: relative` on the map
   // container, which beats Tailwind utilities, so positioning lives on a wrapper.
+  // The globe leaves the canvas transparent around it, showing the space below.
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 bg-[#05070d] bg-[radial-gradient(ellipse_at_center,#0d1626_0%,#05070d_70%)]">
       <div ref={containerRef} className="size-full" />
     </div>
   );

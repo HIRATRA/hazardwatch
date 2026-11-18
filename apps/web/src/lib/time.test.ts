@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatPeriod, formatRelativeTime, formatUtc } from "./time";
+import { formatPeriod, formatRelativeTime, formatUtc, formatUtcTime } from "./time";
 
 const now = new Date("2026-11-16T12:00:00Z");
 const ago = (seconds: number) => new Date(now.getTime() - seconds * 1000);
@@ -21,6 +21,12 @@ describe("formatRelativeTime", () => {
 describe("formatUtc", () => {
   it("formats the date in UTC regardless of the local time zone", () => {
     expect(formatUtc(new Date("2026-11-16T16:16:45Z"))).toBe("Nov 16, 2026, 4:16 PM UTC");
+  });
+});
+
+describe("formatUtcTime", () => {
+  it("formats the time of day in UTC", () => {
+    expect(formatUtcTime(new Date("2026-11-16T16:16:45Z"))).toBe("4:16 PM UTC");
   });
 });
 
