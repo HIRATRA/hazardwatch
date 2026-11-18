@@ -17,6 +17,8 @@ import { useAutoRefresh } from "./use-auto-refresh";
 import { useBasemap } from "./use-basemap";
 import { useLiveImageTimes } from "./use-live-image-times";
 
+const countFormat = new Intl.NumberFormat("en");
+
 /** The workers poll their feeds every minute, so refreshing faster brings nothing. */
 const REFRESH_INTERVAL_MS = 60_000;
 
@@ -60,15 +62,29 @@ export function MapExplorer({
   const activeId = selectedEvent?.id ?? null;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+    // The page itself does not scroll: the list scrolls natively and the wheel zooms the map.
+    <div data-lenis-prevent className="flex min-h-0 flex-1 flex-col md:flex-row">
       <aside
         aria-label="Events"
-        className="border-border order-2 flex h-[45dvh] min-h-0 flex-col border-t md:order-1 md:h-auto md:w-96 md:border-t-0 md:border-r"
+        className="border-border order-2 flex h-[50dvh] min-h-0 flex-col border-t md:order-1 md:h-auto md:w-[25rem] md:border-t-0 md:border-r"
       >
+        <div className="flex items-baseline justify-between gap-3 px-4 pt-4 pb-3">
+          <h2 className="flex items-center gap-2 text-sm font-medium">
+            <span aria-hidden className="relative flex size-2 self-center">
+              <span className="bg-accent absolute inline-flex size-full rounded-full opacity-60 motion-safe:animate-ping" />
+              <span className="bg-accent relative inline-flex size-2 rounded-full" />
+            </span>
+            {zone ? "Events in this zone" : "Live events"}
+          </h2>
+          <p className="text-muted text-xs tabular-nums" aria-live="polite">
+            {countFormat.format(events.length)} {events.length === 1 ? "event" : "events"}
+            {truncated && ", latest shown"}
+          </p>
+        </div>
         <MapFilters filters={filters} />
+        <div aria-hidden className="border-border mx-4 mb-2 border-t" />
         <EventList
           events={events}
-          truncated={truncated}
           now={generatedAt}
           selectedId={activeId}
           onSelect={setSelectedId}

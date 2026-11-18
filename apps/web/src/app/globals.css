@@ -60,6 +60,17 @@
     animation-delay: calc(150ms + var(--index, 0) * 70ms);
   }
 
+  /* Rows of the map's event list, gliding in one after the other. */
+  .list-in {
+    animation: list-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--index, 0) * 25ms);
+  }
+
+  .select-content[data-state="open"] {
+    transform-origin: var(--radix-select-content-transform-origin);
+    animation: select-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
   .signal-ring {
     animation: signal-ring 3.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
     animation-delay: calc(var(--delay, 0) * 1ms);
@@ -70,6 +81,20 @@
   from {
     opacity: 0;
     transform: translateY(28px);
+  }
+}
+
+@keyframes list-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes select-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
   }
 }
 

@@ -137,7 +137,7 @@ export function ZoneForm<CancelRoute extends string>({
             name="radiusKm"
             value={String(radiusKm)}
             options={radiusOptions}
-            onChange={(event) => setRadiusKm(Number(event.target.value))}
+            onValueChange={(value) => setRadiusKm(Number(value))}
             error={errors.radiusKm}
           />
 
@@ -196,7 +196,7 @@ export function ZoneForm<CancelRoute extends string>({
             name="alertMinSeverity"
             value={alertMinSeverity}
             options={alertOptions}
-            onChange={(event) => setAlertMinSeverity(event.target.value)}
+            onValueChange={setAlertMinSeverity}
             error={errors.alertMinSeverity}
           />
 
