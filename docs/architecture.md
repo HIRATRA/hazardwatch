@@ -369,9 +369,3 @@ in [the deployment guide](deployment.md).
   process at startup with a readable message, not at the first request.
 - **Keep boundaries explicit.** Code shared between applications lives in a
   package with a deliberate public API.
-
-## Roadmap
-
-The following parts are planned and not built yet:
-
-- An assistant that summarises the situation around a place or an event.
