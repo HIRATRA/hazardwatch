@@ -121,7 +121,8 @@ only integration point between the web app and the worker.
   that returns events in the normalised shape. Feed-specific formats never
   leave the adapter. Adapters validate upstream payloads with zod: a
   malformed record is logged and skipped, while an unrecognisable payload
-  fails the run.
+  fails the run. A source whose feed only covers a recent window declares
+  itself windowed, so that its lasting events keep their start.
 - **HTTP.** Requests go through a shared helper that combines a timeout
   with the shutdown signal, so a stalled server cannot block a source.
 - **Scheduler.** Every source is polled on its own interval. The next run
@@ -139,7 +140,8 @@ only integration point between the web app and the worker.
   recorded for each zone an event reaches at or above the zone's threshold
   (see [ADR 0008](adr/0008-raise-alerts-when-events-are-written.md)).
   Alerts are raised once per zone and event, and again when the event
-  grows more severe. Events that ended more than a day ago raise none.
+  grows more severe or starts again. Events that ended more than a day ago
+  raise none.
 - **Alert emails.** Every two minutes, the worker claims the alerts waiting
   to be emailed and sends each user one message listing theirs (see
   [ADR 0009](adr/0009-email-alerts-to-confirmed-addresses-from-the-worker.md)).
@@ -155,10 +157,11 @@ only integration point between the web app and the worker.
 
 #### Sources
 
-| Source  | Feed                                                | Polled every | Hazard kinds                                           |
-| ------- | --------------------------------------------------- | ------------ | ------------------------------------------------------ |
-| `usgs`  | Magnitude 2.5+ earthquakes worldwide, past 24 hours | 1 minute     | Earthquake                                             |
-| `gdacs` | Disaster alerts modified in the past two days       | 10 minutes   | Tropical cyclone, flood, volcano, drought and wildfire |
+| Source       | Feed                                                | Polled every | Hazard kinds                                           |
+| ------------ | --------------------------------------------------- | ------------ | ------------------------------------------------------ |
+| `usgs`       | Magnitude 2.5+ earthquakes worldwide, past 24 hours | 1 minute     | Earthquake                                             |
+| `gdacs`      | Disaster alerts modified in the past two days       | 10 minutes   | Tropical cyclone, flood, volcano, drought and wildfire |
+| `nasa_firms` | Fire detections by satellite, past 24 hours         | 30 minutes   | Wildfire                                               |
 
 **USGS.** The [summary feed](https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php)
 is regenerated every minute and covers a sliding 24-hour window, so the
@@ -202,6 +205,32 @@ as PAGER:
 | `minor`   | green       | Unlikely                 |
 | `severe`  | orange      | Possibly needed          |
 | `extreme` | red         | Likely needed            |
+
+**NASA FIRMS.** [FIRMS](https://firms.modaps.eosdis.nasa.gov) publishes the
+fire detections of the past 24 hours by the VIIRS instruments of the NOAA-20
+and NOAA-21 satellites, as public CSV files that need no API key. That is
+about 100,000 detections a day, so the adapter groups them into fires, one
+per cell of a 0.25° grid, about 28 km (see
+[ADR 0011](adr/0011-group-satellite-fire-detections-into-grid-cells.md)).
+
+- A HEAD request reads when each file changed, since NASA's server ignores
+  conditional requests, and the files are only downloaded when one did.
+- Low-confidence detections are ignored. A cell's power is the highest
+  total fire radiative power seen by one satellite, so that a fire seen by
+  both is not counted twice.
+- Each fire is located at the centre of its detections and active from the
+  first to the last of them. The source is windowed, so a fire that keeps
+  burning keeps its start.
+
+Severity follows the power in a cell. Cells below 250 MW, mostly small
+agricultural burns, are left out:
+
+| Severity   | Power in a cell |
+| ---------- | --------------- |
+| `minor`    | 250 MW          |
+| `moderate` | 500 MW          |
+| `severe`   | 1,000 MW        |
+| `extreme`  | 2,500 MW        |
 
 ### Database package (`packages/db`)
 
@@ -249,6 +278,11 @@ equal for instantaneous events such as earthquakes, while lasting events
 such as floods extend `active_until` with every update. Time windows match
 events on `active_until`, so an event that started long ago but is still
 going on is included (see [ADR 0006](adr/0006-model-hazard-events-as-activity-periods.md)).
+
+A windowed source, such as FIRMS, only sees the recent part of a lasting
+event, so the repository keeps the stored `occurred_at` while the event goes
+on. Activity seen after more than two days of silence starts the event
+again, with a new `occurred_at`.
 
 A watch zone covers every point within `radius_km` of its `center`. Events
 are matched with `ST_DWithin` on the geography type, so that distances are
@@ -323,5 +357,4 @@ in [the deployment guide](deployment.md).
 
 The following parts are planned and not built yet:
 
-- A source adapter for NASA FIRMS satellite fire detections.
 - An assistant that summarises the situation around a place or an event.

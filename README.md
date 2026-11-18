@@ -14,7 +14,7 @@ interactive map, and alerts you when an event hits an area you care about.
 | PostGIS event store and ingestion pipeline                       | Done    |
 | USGS earthquake feed                                             | Done    |
 | GDACS alerts for cyclones, floods, volcanoes, droughts and fires | Done    |
-| NASA FIRMS satellite fire detections                             | Planned |
+| NASA FIRMS satellite fire detections                             | Done    |
 | Interactive map with filters                                     | Done    |
 | Watch zones                                                      | Done    |
 | Alerts when an event reaches a watch zone                        | Done    |
