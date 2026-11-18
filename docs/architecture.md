@@ -288,7 +288,8 @@ sequenceDiagram
 
 All applications read a single `.env` file at the repository root in
 development. In production the same variables come from the hosting
-platform.
+platforms: Vercel for the web app and Render for the worker, as described
+in [the deployment guide](deployment.md).
 
 | Variable             | Used by     | Description                                                    |
 | -------------------- | ----------- | -------------------------------------------------------------- |
