@@ -110,7 +110,11 @@ only integration point between the web app and the worker.
   Events merge into clusters, coloured by their most severe event, until
   the map shows about a country. Fires add their heat below the markers, and
   events that started in the past six hours pulse, still for users who
-  prefer reduced motion.
+  prefer reduced motion. The card of a selected event shows the area around
+  it seen by NOAA-20 on its last day of activity, a still image the browser
+  asks GIBS for, with its fire detections and coastlines. Its arrows go back
+  and forth in days, and an empty picture, where the satellite missed the
+  place, gives way to the day before.
   Changing a filter navigates to a new URL, and the page calls
   `router.refresh()` every minute while visible. Both re-render on the
   server and keep client state such as the map position and the selected
