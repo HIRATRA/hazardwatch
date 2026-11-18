@@ -1,23 +1,27 @@
 # Render Blueprint for the ingestion worker. The web app runs on Vercel.
-# See docs/deployment.md for the whole setup.
+# See docs/deployment.md for the whole setup, and ADR 0010 for why the
+# worker runs as a free web service.
 services:
-  - type: worker
+  - type: web
     name: hazardwatch-worker
     runtime: node
+    # Free web services sleep after 15 minutes without inbound requests. An
+    # uptime monitor calling /health every 5 minutes keeps the worker awake.
+    plan: free
     # Next to the Neon database and the Vercel functions, in US East.
     region: virginia
-    # Background workers have no free instance type. Without a plan, Render
-    # picks the smallest one, which is plenty for the worker.
     # Corepack installs the pnpm version pinned in package.json. Dev
     # dependencies, such as TypeScript, are needed to build even though
-    # NODE_ENV is production.
+    # NODE_ENV is production. Free services have no pre-deploy step, so new
+    # migrations are applied at the end of the build, once per deploy.
     buildCommand: >-
       corepack enable &&
       pnpm install --frozen-lockfile --prod=false &&
-      pnpm turbo run build --filter=@hazardwatch/worker
-    # Applies new migrations once per deploy, before the new worker starts.
-    preDeployCommand: node packages/db/dist/migrate.js
+      pnpm turbo run build --filter=@hazardwatch/worker &&
+      node packages/db/dist/migrate.js
     startCommand: node apps/worker/dist/index.js
+    # Render sets PORT, which turns on the worker's health endpoint.
+    healthCheckPath: /health
     # Deploy only commits whose CI checks passed.
     autoDeployTrigger: checksPass
     # Changes to the web app alone do not redeploy the worker.
@@ -43,7 +47,8 @@ services:
       # Public URL of the web app on Vercel, for the links in alert emails.
       - key: APP_URL
         sync: false
-      # Leave SMTP_URL empty to run without email.
+      # Leave SMTP_URL empty to run without email. Free services cannot
+      # reach ports 465 and 587: use a provider port such as Resend's 2465.
       - key: SMTP_URL
         sync: false
       - key: EMAIL_FROM

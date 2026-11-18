@@ -16,6 +16,7 @@ new record that supersedes the old one.
 | [0007](0007-define-watch-zones-as-circles-on-the-earths-surface.md) | Define watch zones as circles on the Earth's surface | Accepted |
 | [0008](0008-raise-alerts-when-events-are-written.md)                | Raise alerts when events are written                 | Accepted |
 | [0009](0009-email-alerts-to-confirmed-addresses-from-the-worker.md) | Email alerts to confirmed addresses from the worker  | Accepted |
+| [0010](0010-run-the-worker-as-a-free-render-web-service.md)         | Run the worker as a free Render web service          | Accepted |
 
 ## Writing a new record
 
