@@ -18,6 +18,7 @@ new record that supersedes the old one.
 | [0009](0009-email-alerts-to-confirmed-addresses-from-the-worker.md) | Email alerts to confirmed addresses from the worker  | Accepted |
 | [0010](0010-run-the-worker-as-a-free-render-web-service.md)         | Run the worker as a free Render web service          | Accepted |
 | [0011](0011-group-satellite-fire-detections-into-grid-cells.md)     | Group satellite fire detections into grid cells      | Accepted |
+| [0012](0012-show-the-map-as-a-globe-with-nasa-imagery.md)           | Show the map as a globe with NASA imagery            | Accepted |
 
 ## Writing a new record
 

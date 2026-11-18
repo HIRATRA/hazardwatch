@@ -15,6 +15,7 @@ flowchart LR
     feeds["Open data feeds<br/>USGS, NASA FIRMS, GDACS"]
     browser(("Browser"))
     tiles["OpenFreeMap<br/>vector tiles"]
+    imagery["NASA GIBS<br/>satellite imagery"]
     smtp["SMTP server<br/>Mailpit in development"]
 
     subgraph worker ["apps/worker"]
@@ -48,6 +49,7 @@ flowchart LR
     browser --> actions
     browser --> authApi
     browser -- "basemap" --> tiles
+    browser -- "imagery" --> imagery
     pages --> events
     pages --> runs
     pages --> zones
@@ -94,6 +96,11 @@ only integration point between the web app and the worker.
   active during the period, most recently active first and capped at
   2,000, and hands them to a client component that renders them with
   MapLibre GL on OpenFreeMap tiles (see [ADR 0005](adr/0005-render-maps-with-maplibre-and-openfreemap.md)).
+  The map is a globe, and its basemap can show NASA satellite imagery
+  instead: the latest complete day, clouds over the Americas every ten
+  minutes, or city lights at night (see [ADR 0012](adr/0012-show-the-map-as-a-globe-with-nasa-imagery.md)).
+  The browser fetches the imagery from NASA directly and remembers the
+  chosen basemap.
   Changing a filter navigates to a new URL, and the page calls
   `router.refresh()` every minute while visible. Both re-render on the
   server and keep client state such as the map position and the selected

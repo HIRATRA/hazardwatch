@@ -16,6 +16,7 @@ interactive map, and alerts you when an event hits an area you care about.
 | GDACS alerts for cyclones, floods, volcanoes, droughts and fires | Done    |
 | NASA FIRMS satellite fire detections                             | Done    |
 | Interactive map with filters                                     | Done    |
+| Globe with satellite, live cloud and night light imagery         | Done    |
 | Watch zones                                                      | Done    |
 | Alerts when an event reaches a watch zone                        | Done    |
 | Alerts delivered by email                                        | Done    |
@@ -24,7 +25,8 @@ interactive map, and alerts you when an event hits an area you care about.
 ## Tech stack
 
 - **Web:** Next.js 16 (App Router), React 19, Tailwind CSS 4
-- **Maps:** MapLibre GL with OpenFreeMap vector tiles, no API key needed
+- **Maps:** MapLibre GL globe with OpenFreeMap vector tiles and NASA GIBS
+  satellite imagery, no API key needed
 - **Authentication:** Better Auth
 - **Data:** PostgreSQL 17 with PostGIS, Drizzle ORM
 - **Ingestion:** Node.js worker with pino logging
