@@ -1,10 +1,11 @@
 "use client";
 
-import type {
-  ExpressionSpecification,
-  FilterSpecification,
-  GeoJSONSource,
-  Map as MapLibreMap,
+import type { Point } from "geojson";
+import {
+  Popup,
+  type Map as MapLibreMap,
+  type MapGeoJSONFeature,
+  type PointLike,
 } from "maplibre-gl";
 import { useEffect, useMemo, useRef } from "react";
 
@@ -14,47 +15,36 @@ import type { ImageryTiles } from "@/lib/imagery";
 import { zoneBounds } from "@/lib/zones/geometry";
 import type { ZoneShape } from "@/lib/zones/types";
 
+import {
+  addEventLayers,
+  clusterExpansionZoom,
+  CLUSTERS_LAYER_ID,
+  EVENTS_LAYER_ID,
+  setEventData,
+  setHovered,
+  setSelectedEvent,
+  startPulse,
+} from "./event-layers";
 import { setImagery } from "./imagery-layers";
 import { createMap } from "./maplibre";
-import { severityStyles } from "./severity";
 import { addZoneLayers } from "./zone-layers";
 
-const SOURCE_ID = "events";
-const EVENTS_LAYER_ID = "events";
-const SELECTION_LAYER_ID = "events-selection";
+const INTERACTIVE_LAYERS = [CLUSTERS_LAYER_ID, EVENTS_LAYER_ID];
 
-const bySeverity = (pick: (style: (typeof severityStyles)["minor"]) => string | number) =>
-  [
-    "match",
-    ["get", "severity"],
-    "minor",
-    pick(severityStyles.minor),
-    "moderate",
-    pick(severityStyles.moderate),
-    "severe",
-    pick(severityStyles.severe),
-    "extreme",
-    pick(severityStyles.extreme),
-    pick(severityStyles.minor),
-  ] satisfies ExpressionSpecification;
+const isCluster = (feature: MapGeoJSONFeature) => feature.properties.cluster === true;
 
-const markerRadius = bySeverity((style) => style.radius);
-
-// Circles grow with the zoom level so that markers stay readable up close.
-const zoomedRadius = (extra: number): ExpressionSpecification => [
-  "interpolate",
-  ["linear"],
-  ["zoom"],
-  1,
-  ["+", markerRadius, extra],
-  8,
-  ["+", ["*", 2, markerRadius], extra],
-];
-
-const selectionFilter = (id: string | null): FilterSpecification => ["==", ["get", "id"], id ?? ""];
+/** Text describing a cluster: its number of events, and of recent ones. */
+function describeCluster(feature: MapGeoJSONFeature): string {
+  const count = Number(feature.properties.point_count);
+  const recent = Number(feature.properties.recent);
+  const events = `${count} events`;
+  return recent > 0 ? `${events}, ${recent} new` : events;
+}
 
 interface HazardMapProps {
   events: readonly MapEvent[];
+  /** ISO 8601 reference time, provided by the server, deciding which events are recent. */
+  now: string;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   /**
@@ -67,16 +57,19 @@ interface HazardMapProps {
 }
 
 /**
- * MapLibre map showing events as circles coloured by severity.
+ * MapLibre map showing events as circles coloured by severity, merged into
+ * clusters when zoomed out, with the heat of fires below them and rings
+ * pulsing around recent ones.
  *
  * The map instance is created once and updated imperatively when props
  * change, so React re-renders never rebuild the WebGL context.
  */
-export function HazardMap({ events, selectedId, onSelect, zone, imagery }: HazardMapProps) {
+export function HazardMap({ events, now, selectedId, onSelect, zone, imagery }: HazardMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
 
-  const data = useMemo(() => toFeatureCollection(events), [events]);
+  const data = useMemo(() => toFeatureCollection(events, new Date(now)), [events, now]);
+  const hasRecent = data.features.some((feature) => feature.properties.recent);
 
   // Latest values for handlers registered once, when the map is created.
   const latest = useRef({ data, events, selectedId, onSelect, zone, imagery });
@@ -104,61 +97,89 @@ export function HazardMap({ events, selectedId, onSelect, zone, imagery }: Hazar
       if (initialZone) {
         addZoneLayers(map, initialZone);
       }
-      map.addSource(SOURCE_ID, { type: "geojson", data: latest.current.data });
-      map.addLayer({
-        id: EVENTS_LAYER_ID,
-        type: "circle",
-        source: SOURCE_ID,
-        layout: {
-          // Draw the most severe events on top.
-          "circle-sort-key": bySeverity((style) => style.radius),
-        },
-        paint: {
-          "circle-color": bySeverity((style) => style.color),
-          "circle-radius": zoomedRadius(0),
-          "circle-opacity": 0.85,
-          "circle-stroke-color": "#0b0f14",
-          "circle-stroke-width": 1,
-        },
-      });
-      map.addLayer({
-        id: SELECTION_LAYER_ID,
-        type: "circle",
-        source: SOURCE_ID,
-        filter: selectionFilter(latest.current.selectedId),
-        paint: {
-          "circle-color": "transparent",
-          "circle-radius": zoomedRadius(5),
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 2,
-        },
-      });
+      addEventLayers(map, latest.current.data, latest.current.selectedId);
     });
 
+    const featureAt = (point: PointLike) =>
+      map.getLayer(EVENTS_LAYER_ID)
+        ? map.queryRenderedFeatures(point, { layers: INTERACTIVE_LAYERS })[0]
+        : undefined;
+
+    // A cluster opens up to its events, an event is selected, and a click
+    // anywhere else clears the selection.
     map.on("click", (event) => {
-      const [feature] = map.getLayer(EVENTS_LAYER_ID)
-        ? map.queryRenderedFeatures(event.point, { layers: [EVENTS_LAYER_ID] })
-        : [];
+      const feature = featureAt(event.point);
+      if (feature && isCluster(feature)) {
+        const center = (feature.geometry as Point).coordinates as [number, number];
+        clusterExpansionZoom(map, Number(feature.properties.cluster_id))
+          .then((zoom) => map.easeTo({ center, zoom }))
+          .catch(() => undefined);
+        return;
+      }
       const id: unknown = feature?.properties.id;
       latest.current.onSelect(typeof id === "string" ? id : null);
     });
-    map.on("mouseenter", EVENTS_LAYER_ID, () => {
-      map.getCanvas().style.cursor = "pointer";
+
+    // The pointer highlights what it is over and names it in a tooltip.
+    const tooltip = new Popup({
+      className: "hazard-tooltip",
+      closeButton: false,
+      closeOnClick: false,
+      offset: 14,
+      maxWidth: "260px",
     });
-    map.on("mouseleave", EVENTS_LAYER_ID, () => {
-      map.getCanvas().style.cursor = "";
+    let hoveredId: number | string | undefined;
+    map.on("mousemove", (event) => {
+      const feature = featureAt(event.point);
+      if (feature?.id === hoveredId) {
+        return;
+      }
+      hoveredId = feature?.id;
+      setHovered(map, hoveredId);
+      map.getCanvas().style.cursor = feature ? "pointer" : "";
+
+      const id: unknown = feature?.properties.id;
+      const text =
+        feature && isCluster(feature)
+          ? describeCluster(feature)
+          : latest.current.events.find((candidate) => candidate.id === id)?.title;
+      if (feature && text) {
+        const coordinates = (feature.geometry as Point).coordinates as [number, number];
+        tooltip.setLngLat(coordinates).setText(text).addTo(map);
+      } else {
+        tooltip.remove();
+      }
+    });
+    map.getCanvas().addEventListener("mouseleave", () => {
+      hoveredId = undefined;
+      setHovered(map, undefined);
+      tooltip.remove();
     });
 
     return () => {
+      tooltip.remove();
       map.remove();
       mapRef.current = null;
     };
   }, []);
 
   useEffect(() => {
-    // The returned promise only signals when the worker has indexed the data.
-    void mapRef.current?.getSource<GeoJSONSource>(SOURCE_ID)?.setData(data);
+    const map = mapRef.current;
+    if (map) {
+      setEventData(map, data);
+    }
   }, [data]);
+
+  // Animating redraws the map on every frame, so it only runs while some
+  // event is recent.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !hasRecent) {
+      return;
+    }
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    return startPulse(map, { reducedMotion });
+  }, [hasRecent]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -173,9 +194,7 @@ export function HazardMap({ events, selectedId, onSelect, zone, imagery }: Hazar
     if (!map) {
       return;
     }
-    if (map.getLayer(SELECTION_LAYER_ID)) {
-      map.setFilter(SELECTION_LAYER_ID, selectionFilter(selectedId));
-    }
+    setSelectedEvent(map, selectedId);
 
     const selected = latest.current.events.find((event) => event.id === selectedId);
     if (selected) {
