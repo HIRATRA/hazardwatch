@@ -24,7 +24,8 @@ interactive map, and alerts you when an event hits an area you care about.
 
 ## Tech stack
 
-- **Web:** Next.js 16 (App Router), React 19, Tailwind CSS 4
+- **Web:** Next.js 16 (App Router), React 19, Tailwind CSS 4, Motion and Lenis for
+  animation and smooth scrolling
 - **Maps:** MapLibre GL globe with OpenFreeMap vector tiles and NASA GIBS
   satellite imagery, no API key needed
 - **Authentication:** Better Auth
