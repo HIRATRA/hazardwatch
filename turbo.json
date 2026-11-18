@@ -8,7 +8,10 @@
     "SMTP_URL",
     "EMAIL_FROM",
     "APP_URL",
-    "LOG_LEVEL"
+    "LOG_LEVEL",
+    "VERCEL_ENV",
+    "VERCEL_URL",
+    "VERCEL_BRANCH_URL"
   ],
   "tasks": {
     "build": {

@@ -44,22 +44,25 @@ PostGIS.
 Import the GitHub repository in Vercel and set **Root Directory** to
 `apps/web`. Vercel detects Next.js, pnpm and Turborepo on its own.
 
-Add these environment variables for Production and Preview:
+Add these environment variables, ticking both **Production** and **Preview**
+unless noted. Without them, the build of every branch fails:
 
-| Variable             | Value                                                                           |
-| -------------------- | ------------------------------------------------------------------------------- |
-| `DATABASE_URL`       | Neon's pooled connection string                                                 |
-| `BETTER_AUTH_SECRET` | A new secret, from `openssl rand -base64 32`                                    |
-| `BETTER_AUTH_URL`    | The production domain with its scheme, such as `https://hazardwatch.vercel.app` |
-| `SMTP_URL`           | Optional, see [Email](#4-email). Without it, no email is sent                   |
-| `EMAIL_FROM`         | Optional, the sender of every email                                             |
+| Variable             | Value                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------- |
+| `DATABASE_URL`       | Neon's pooled connection string                                                       |
+| `BETTER_AUTH_SECRET` | A new secret, from `openssl rand -base64 32`                                          |
+| `BETTER_AUTH_URL`    | Production only: the domain with its scheme, such as `https://hazardwatch.vercel.app` |
+| `SMTP_URL`           | Optional, see [Email](#4-email). Without it, no email is sent                         |
+| `EMAIL_FROM`         | Optional, the sender of every email                                                   |
 
 The build validates these variables and stops when one is missing or
 invalid, rather than shipping an app that fails at its first request. A
 change to a variable applies from the next deploy.
 
-Signing in only works on the production domain: preview deployments have
-their own URLs, which differ from `BETTER_AUTH_URL`.
+Preview deployments use their own URLs instead of `BETTER_AUTH_URL`, read
+from the system variables Vercel exposes by default, so that signing in
+works on them too. They share the production database, so accounts and
+zones created on a preview are real.
 
 ## 3. Worker on Render
 
