@@ -47,6 +47,11 @@ The web app runs on <http://localhost:3000>. Generate a secret with
 `openssl rand -base64 32`. Emails sent in development never leave your
 machine: Mailpit catches them and shows them on <http://localhost:8025>.
 
+## Deployment
+
+The web app runs on Vercel, the worker on Render and the database on Neon.
+[docs/deployment.md](docs/deployment.md) walks through the setup.
+
 ## Project structure
 
 ```

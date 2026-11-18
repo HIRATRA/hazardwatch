@@ -1,0 +1,50 @@
+# Render Blueprint for the ingestion worker. The web app runs on Vercel.
+# See docs/deployment.md for the whole setup.
+services:
+  - type: worker
+    name: hazardwatch-worker
+    runtime: node
+    # Next to the Neon database and the Vercel functions, in US East.
+    region: virginia
+    # Background workers have no free instance type. Without a plan, Render
+    # picks the smallest one, which is plenty for the worker.
+    # Corepack installs the pnpm version pinned in package.json. Dev
+    # dependencies, such as TypeScript, are needed to build even though
+    # NODE_ENV is production.
+    buildCommand: >-
+      corepack enable &&
+      pnpm install --frozen-lockfile --prod=false &&
+      pnpm turbo run build --filter=@hazardwatch/worker
+    # Applies new migrations once per deploy, before the new worker starts.
+    preDeployCommand: node packages/db/dist/migrate.js
+    startCommand: node apps/worker/dist/index.js
+    # Deploy only commits whose CI checks passed.
+    autoDeployTrigger: checksPass
+    # Changes to the web app alone do not redeploy the worker.
+    buildFilter:
+      paths:
+        - apps/worker/**
+        - packages/**
+        - package.json
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+        - turbo.json
+        - .nvmrc
+        - render.yaml
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      # Neon's direct connection string, without -pooler in the host: the
+      # worker keeps its connections open and the migrations need a session.
+      - key: DATABASE_URL
+        sync: false
+      # Public URL of the web app on Vercel, for the links in alert emails.
+      - key: APP_URL
+        sync: false
+      # Leave SMTP_URL empty to run without email.
+      - key: SMTP_URL
+        sync: false
+      - key: EMAIL_FROM
+        sync: false

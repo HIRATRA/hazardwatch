@@ -1,8 +1,11 @@
 import { z } from "zod";
 
-/** An empty value in a .env file means the variable is not set. */
-const optional = <Schema extends z.ZodType>(schema: Schema) =>
-  z.preprocess((value) => (value === "" ? undefined : value), schema.optional());
+/**
+ * An empty value means the variable is not set, as in a .env file or a
+ * hosting dashboard where a field was left blank.
+ */
+const unsetIfEmpty = <Schema extends z.ZodType>(schema: Schema) =>
+  z.preprocess((value) => (value === "" ? undefined : value), schema);
 
 const configSchema = z
   .object({
@@ -10,10 +13,12 @@ const configSchema = z
     DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
     /** SMTP server for alert emails. Without it, alerts are not emailed. */
-    SMTP_URL: optional(z.url({ protocol: /^smtps?$/ })),
-    EMAIL_FROM: z.string().min(1).default("HazardWatch <alerts@hazardwatch.localhost>"),
+    SMTP_URL: unsetIfEmpty(z.url({ protocol: /^smtps?$/ }).optional()),
+    EMAIL_FROM: unsetIfEmpty(
+      z.string().min(1).default("HazardWatch <alerts@hazardwatch.localhost>"),
+    ),
     /** Public URL of the web application, for the links in emails. */
-    APP_URL: optional(z.url({ protocol: /^https?$/ })),
+    APP_URL: unsetIfEmpty(z.url({ protocol: /^https?$/ }).optional()),
   })
   .refine((config) => !config.SMTP_URL || config.APP_URL, {
     message: "APP_URL is required to send email, for the links it contains",
