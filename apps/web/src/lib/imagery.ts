@@ -194,3 +194,39 @@ export function basemapPreviewUrl(
       return gibsTileUrl(nightLightsLayer, NIGHT_LIGHTS_TIME, { z: 2, x: 2, y: 1 });
   }
 }
+
+const GIBS_WMS_URL = "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi";
+
+/** Area in degrees: south, west, north and east edges. */
+export type Bounds = readonly [south: number, west: number, north: number, east: number];
+
+/**
+ * URL of a single image of a GIBS layer over an area, in latitude and
+ * longitude, for pages that show a still picture rather than a map.
+ */
+export function gibsImageUrl(
+  layer: GibsLayer,
+  { bounds, time, width, height }: { bounds: Bounds; time: string; width: number; height: number },
+): string {
+  const query = new URLSearchParams({
+    SERVICE: "WMS",
+    REQUEST: "GetMap",
+    VERSION: "1.3.0",
+    LAYERS: layer.id,
+    STYLES: "",
+    CRS: "EPSG:4326",
+    // WMS 1.3.0 orders EPSG:4326 coordinates latitude first.
+    BBOX: bounds.join(","),
+    WIDTH: String(width),
+    HEIGHT: String(height),
+    FORMAT: "image/jpeg",
+    TIME: time,
+  });
+  return `${GIBS_WMS_URL}?${query.toString()}`;
+}
+
+/** Time GIBS replaces with that of the latest image of a layer. */
+export const latestImageTime = LATEST_TIME;
+
+/** Time of the only night lights composite. */
+export const nightLightsTime = NIGHT_LIGHTS_TIME;
