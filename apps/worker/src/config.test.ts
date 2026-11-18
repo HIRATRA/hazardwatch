@@ -27,6 +27,16 @@ describe("loadConfig", () => {
     });
   });
 
+  it("treats blank email settings as unset", () => {
+    const config = loadConfig({ DATABASE_URL, SMTP_URL: "", EMAIL_FROM: "", APP_URL: "" });
+
+    expect(config).toMatchObject({
+      SMTP_URL: undefined,
+      EMAIL_FROM: "HazardWatch <alerts@hazardwatch.localhost>",
+      APP_URL: undefined,
+    });
+  });
+
   it("requires the app URL to send email", () => {
     expect(() => loadConfig({ DATABASE_URL, SMTP_URL: "smtp://localhost:1025" })).toThrow(
       /APP_URL is required to send email/,
