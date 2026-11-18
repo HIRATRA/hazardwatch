@@ -61,14 +61,14 @@ NASA GIBS.
 
 <table>
   <tr>
-    <td width="33%"><img src="docs/screenshots/basemap-satellite.jpg" alt="Satellite basemap: Tropical Cyclone Akvan over the Bay of Bengal, in true colour" /></td>
-    <td width="33%"><img src="docs/screenshots/basemap-live.jpg" alt="Live clouds basemap: clouds over the western United States, imaged by GOES less than an hour earlier" /></td>
-    <td width="33%"><img src="docs/screenshots/basemap-night.jpg" alt="Night lights basemap: the cities of Japan, Korea and China at night" /></td>
+    <td valign="top" width="33%"><img src="docs/screenshots/basemap-satellite.jpg" alt="Satellite basemap: Tropical Cyclone Akvan over the Bay of Bengal, in true colour" /></td>
+    <td valign="top" width="33%"><img src="docs/screenshots/basemap-live.jpg" alt="Live clouds basemap: clouds over the western United States, imaged by GOES less than an hour earlier" /></td>
+    <td valign="top" width="33%"><img src="docs/screenshots/basemap-night.jpg" alt="Night lights basemap: the cities of Japan, Korea and China at night" /></td>
   </tr>
   <tr>
-    <td><strong>Satellite</strong><br />True colour of the last complete day, here Tropical Cyclone Akvan over the Bay of Bengal.</td>
-    <td><strong>Live clouds</strong><br />A new image every ten minutes from the GOES satellites, over the Americas and the Pacific.</td>
-    <td><strong>Night lights</strong><br />The Black Marble composite of city lights, here around the Sea of Japan.</td>
+    <td valign="top"><strong>Satellite</strong><br />True colour of the last complete day, here Tropical Cyclone Akvan over the Bay of Bengal.</td>
+    <td valign="top"><strong>Live clouds</strong><br />A new image every ten minutes from the GOES satellites, over the Americas and the Pacific.</td>
+    <td valign="top"><strong>Night lights</strong><br />The Black Marble composite of city lights, here around the Sea of Japan.</td>
   </tr>
 </table>
 
@@ -83,12 +83,12 @@ the app and, once the address is confirmed, in a digest email.
 
 <table>
   <tr>
-    <td width="58%"><img src="docs/screenshots/alerts.jpg" alt="The alerts page, listing two fires that reached a watch zone" /></td>
-    <td width="42%"><img src="docs/screenshots/email.jpg" alt="The alert email: two events reached your watch zones, with a link to all alerts" /></td>
+    <td valign="top" width="58%"><img src="docs/screenshots/alerts.jpg" alt="The alerts page, listing two fires that reached a watch zone" /></td>
+    <td valign="top" width="42%"><img src="docs/screenshots/email.jpg" alt="The alert email: two events reached your watch zones, with a link to all alerts" /></td>
   </tr>
   <tr>
-    <td><strong>In the app</strong>, with an unread count in the header.</td>
-    <td><strong>By email</strong>, in one digest every two minutes at most.</td>
+    <td valign="top"><strong>In the app</strong>, with an unread count in the header.</td>
+    <td valign="top"><strong>By email</strong>, in one digest every two minutes at most.</td>
   </tr>
 </table>
 
