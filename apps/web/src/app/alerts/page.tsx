@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PushToggle } from "@/components/alerts/push-toggle";
 import { EmailVerificationNotice } from "@/components/auth/email-verification-notice";
 import { AccountActions } from "@/components/layout/account-actions";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -8,6 +9,7 @@ import { SeverityDot } from "@/components/map/severity";
 import { Button, buttonClassName } from "@/components/ui/button";
 import { RelativeTime } from "@/components/ui/relative-time";
 import { countUnreadAlerts, listAlerts } from "@/lib/alerts/queries";
+import { env } from "@/lib/env";
 import { hazardSeverityLabels } from "@/lib/events/format";
 import { requireSession } from "@/lib/session";
 
@@ -46,6 +48,12 @@ export default async function AlertsPage() {
         </div>
 
         {!user.emailVerified && <EmailVerificationNotice email={user.email} className="mt-6" />}
+
+        {env.VAPID_PUBLIC_KEY && (
+          <div className="mt-6">
+            <PushToggle publicKey={env.VAPID_PUBLIC_KEY} />
+          </div>
+        )}
 
         {alerts.length === 0 ? (
           <div className="border-border mt-8 rounded-lg border border-dashed px-6 py-12 text-center">
