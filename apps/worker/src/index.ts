@@ -6,7 +6,7 @@ import { ALERT_EMAIL_INTERVAL_MS, emailPendingAlerts } from "./alerts/notifier.j
 import { ALERT_PUSH_INTERVAL_MS, pushPendingAlerts } from "./alerts/push-notifier.js";
 import { createAlertPushRepository } from "./alerts/push-repository.js";
 import { createPushSender } from "./alerts/push-sender.js";
-import { loadConfig } from "./config.js";
+import { loadConfig, pushContact } from "./config.js";
 import { startHealthServer } from "./health.js";
 import { createLogger } from "./logger.js";
 import { createIngestionRepository } from "./repository.js";
@@ -54,7 +54,7 @@ async function runAlertEmails(): Promise<void> {
 
 /** Pushes waiting alerts on a fixed interval, when VAPID keys are configured. */
 async function runAlertPushes(): Promise<void> {
-  const subject = config.VAPID_SUBJECT ?? config.APP_URL;
+  const subject = pushContact(config);
   if (!config.VAPID_PUBLIC_KEY || !config.VAPID_PRIVATE_KEY || !subject) {
     logger.warn("VAPID keys are not set, alerts are not pushed");
     return;
