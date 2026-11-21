@@ -20,6 +20,11 @@ const serverEnvSchema = z.object({
   /** SMTP server for outgoing email. Without it, no email is sent. */
   SMTP_URL: unsetIfEmpty(z.url({ protocol: /^smtps?$/ }).optional()),
   EMAIL_FROM: unsetIfEmpty(z.string().min(1).default("HazardWatch <alerts@hazardwatch.localhost>")),
+  /**
+   * Public VAPID key the worker signs push notifications with, which
+   * browsers need to subscribe. Without it, push notifications are not offered.
+   */
+  VAPID_PUBLIC_KEY: unsetIfEmpty(z.string().min(1).optional()),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

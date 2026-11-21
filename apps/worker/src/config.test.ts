@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { loadConfig } from "./config.js";
+import { loadConfig, pushContact } from "./config.js";
 
 const DATABASE_URL = "postgres://hazardwatch:hazardwatch@localhost:5433/hazardwatch";
 
@@ -47,6 +47,40 @@ describe("loadConfig", () => {
     expect(() => loadConfig({ DATABASE_URL, SMTP_URL: "smtp://localhost:1025" })).toThrow(
       /APP_URL is required to send email/,
     );
+  });
+
+  it("reads the VAPID keys, which go together", () => {
+    const keys = { VAPID_PUBLIC_KEY: "public", VAPID_PRIVATE_KEY: "private" };
+
+    expect(
+      loadConfig({ DATABASE_URL, APP_URL: "https://hazardwatch.example.com", ...keys }),
+    ).toMatchObject(keys);
+    expect(() => loadConfig({ DATABASE_URL, VAPID_PUBLIC_KEY: "public" })).toThrow(/go together/);
+  });
+
+  it("requires a contact for push services to push", () => {
+    const keys = { VAPID_PUBLIC_KEY: "public", VAPID_PRIVATE_KEY: "private" };
+
+    expect(() => loadConfig({ DATABASE_URL, ...keys })).toThrow(/VAPID_SUBJECT is required/);
+    // Push services refuse a plain http contact, as a local APP_URL is.
+    expect(() => loadConfig({ DATABASE_URL, ...keys, APP_URL: "http://localhost:3000" })).toThrow(
+      /VAPID_SUBJECT is required/,
+    );
+    expect(
+      loadConfig({ DATABASE_URL, ...keys, VAPID_SUBJECT: "mailto:ada@example.com" }),
+    ).toMatchObject({ VAPID_SUBJECT: "mailto:ada@example.com" });
+  });
+
+  it("contacts push services at VAPID_SUBJECT, or at APP_URL when it uses https", () => {
+    const appUrl = "https://hazardwatch.example.com";
+
+    expect(pushContact({ VAPID_SUBJECT: "mailto:ada@example.com", APP_URL: appUrl })).toBe(
+      "mailto:ada@example.com",
+    );
+    expect(pushContact({ VAPID_SUBJECT: undefined, APP_URL: appUrl })).toBe(appUrl);
+    expect(
+      pushContact({ VAPID_SUBJECT: undefined, APP_URL: "http://localhost:3000" }),
+    ).toBeUndefined();
   });
 
   it("rejects an SMTP URL with another protocol", () => {

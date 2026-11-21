@@ -78,6 +78,11 @@ export const zoneAlerts = pgTable(
      * to be sent. Raising the alert again clears it.
      */
     emailedAt: timestamp("emailed_at", { withTimezone: true }),
+    /**
+     * When the alert was pushed to its owner's browsers, or null while it
+     * waits to be. Raising the alert again clears it.
+     */
+    pushedAt: timestamp("pushed_at", { withTimezone: true }),
   },
   (t) => [
     uniqueIndex("zone_alerts_zone_id_event_id_idx").on(t.zoneId, t.eventId),
@@ -87,6 +92,10 @@ export const zoneAlerts = pgTable(
     index("zone_alerts_pending_email_idx")
       .on(t.raisedAt)
       .where(sql`${t.emailedAt} is null`),
+    // Serves the worker looking for alerts to push.
+    index("zone_alerts_pending_push_idx")
+      .on(t.raisedAt)
+      .where(sql`${t.pushedAt} is null`),
   ],
 );
 

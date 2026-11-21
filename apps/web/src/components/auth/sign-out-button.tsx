@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { forgetThisBrowser } from "@/lib/push/browser";
 
 export function SignOutButton() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export function SignOutButton() {
 
   async function handleClick() {
     setPending(true);
+    await forgetThisBrowser();
     await authClient.signOut();
     router.replace("/");
     router.refresh();

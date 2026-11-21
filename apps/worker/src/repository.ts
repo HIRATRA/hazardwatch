@@ -166,6 +166,7 @@ async function raiseAlerts(tx: Transaction, eventIds: readonly string[]): Promis
       raisedAt: sql<Date>`now()`.as("raised_at"),
       readAt: sql<Date | null>`null`.as("read_at"),
       emailedAt: sql<Date | null>`null`.as("emailed_at"),
+      pushedAt: sql<Date | null>`null`.as("pushed_at"),
     })
     .from(hazardEvents)
     .innerJoin(watchZones, eventInZone())
@@ -184,12 +185,14 @@ async function raiseAlerts(tx: Transaction, eventIds: readonly string[]): Promis
     .select(reached)
     .onConflictDoUpdate({
       target: [zoneAlerts.zoneId, zoneAlerts.eventId],
-      // Raised again: unread, and emailed again if the zone asks for it.
+      // Raised again: unread, emailed again if the zone asks for it and
+      // pushed again.
       set: {
         severity: sql`excluded.severity`,
         raisedAt: sql`now()`,
         readAt: null,
         emailedAt: null,
+        pushedAt: null,
       },
       // Only when the event grew more severe, or started again after the
       // alert, as a windowed source reports for a fire that flares up anew.
