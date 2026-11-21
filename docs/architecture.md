@@ -84,7 +84,9 @@ only integration point between the web app and the worker.
   redirects users who are already signed in. A link sent on sign-up
   confirms the address, which alert emails require (see
   [ADR 0009](adr/0009-email-alerts-to-confirmed-addresses-from-the-worker.md));
-  until then, the dashboard and the alerts page offer a new link.
+  until then, the dashboard and the alerts page offer a new link. A
+  forgotten password is reset through a link valid for one hour, which
+  works once and signs every other session out.
 - **Endpoints.** `/api/auth/*` is mounted by Better Auth. `/api/health`
   checks database connectivity and returns `503` when it is unreachable, so
   it can back a load balancer or uptime probe.
