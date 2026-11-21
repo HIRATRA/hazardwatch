@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { escapeHtml } from "./layout.js";
 import { alertDigest, type AlertSummary } from "./templates/alert-digest.js";
+import { resetPassword } from "./templates/reset-password.js";
 import { verifyEmail } from "./templates/verify-email.js";
 
 describe("escapeHtml", () => {
@@ -98,5 +99,20 @@ describe("alertDigest", () => {
     expect(html).toContain("In &lt;img src=x&gt;");
     expect(html).toContain("Flood &amp; landslide");
     expect(html).not.toContain("<img");
+  });
+});
+
+describe("resetPassword", () => {
+  const url = "http://localhost:3000/api/auth/reset-password/abc?callbackURL=%2Freset-password";
+  const message = resetPassword({ name: "Ada <b>", url });
+
+  it("links to the reset page in both versions", () => {
+    expect(message.subject).toBe("Reset your password");
+    expect(message.text).toContain(url);
+    expect(message.html).toContain(`href="${url}"`);
+  });
+
+  it("escapes the user's name in HTML", () => {
+    expect(message.html).toContain("Hi Ada &lt;b&gt;,");
   });
 });
