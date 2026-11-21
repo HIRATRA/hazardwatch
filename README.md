@@ -25,7 +25,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/home.jpg" alt="The HazardWatch home page: the planet drawn as a seismogram, one line per band of latitude, raised over land, with a peak at every event of the past day" />
+  <img src="docs/screenshots/demo.gif" alt="A tour of HazardWatch: the planet drawn as a live seismogram, the feature tiles alive with the events of the past day, the 3D globe of events turned by hand, and a watch zone around Bangui with the fires inside it" />
 </p>
 
 ## What it does
