@@ -5,6 +5,7 @@ import { resetPassword, verifyEmail } from "@hazardwatch/email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
+import { after } from "next/server";
 
 import { db } from "./db";
 import { mailer } from "./email";
@@ -25,13 +26,12 @@ export const auth = betterAuth({
     // One hour, as the email says, and every other session ends with the reset.
     resetPasswordTokenExpiresIn: 60 * 60,
     revokeSessionsOnPasswordReset: true,
-    sendResetPassword: ({ user, url }) => {
-      // Not awaited, like the verification email, so that response times do
-      // not reveal whether an account exists.
-      void mailer
+    // Runs after the response, so that response times do not reveal whether
+    // an account exists.
+    sendResetPassword: async ({ user, url }) => {
+      await mailer
         ?.send({ to: user.email, ...resetPassword({ name: user.name, url }) })
         .catch((error: unknown) => console.error("Failed to send the password reset email", error));
-      return Promise.resolve();
     },
   },
   // Alerts are only emailed to confirmed addresses, so that nobody can sign
@@ -41,14 +41,18 @@ export const auth = betterAuth({
     autoSignInAfterVerification: true,
     // One hour, as the email says.
     expiresIn: 60 * 60,
-    sendVerificationEmail: ({ user, url }) => {
-      // Not awaited, so that response times do not reveal whether sending
-      // succeeded, as Better Auth recommends.
-      void mailer
+    // Runs after the response, so that response times do not reveal whether
+    // sending succeeded.
+    sendVerificationEmail: async ({ user, url }) => {
+      await mailer
         ?.send({ to: user.email, ...verifyEmail({ name: user.name, url }) })
         .catch((error: unknown) => console.error("Failed to send the verification email", error));
-      return Promise.resolve();
     },
+  },
+  advanced: {
+    // Serverless platforms freeze a function once it has answered, which
+    // would cut emails short. `after` keeps it running until they are sent.
+    backgroundTasks: { handler: (task) => after(task) },
   },
   session: {
     cookieCache: {
