@@ -49,6 +49,24 @@ describe("loadConfig", () => {
     );
   });
 
+  it("reads the VAPID keys, which go together", () => {
+    const keys = { VAPID_PUBLIC_KEY: "public", VAPID_PRIVATE_KEY: "private" };
+
+    expect(
+      loadConfig({ DATABASE_URL, APP_URL: "https://hazardwatch.example.com", ...keys }),
+    ).toMatchObject(keys);
+    expect(() => loadConfig({ DATABASE_URL, VAPID_PUBLIC_KEY: "public" })).toThrow(/go together/);
+  });
+
+  it("requires a contact for push services to push", () => {
+    const keys = { VAPID_PUBLIC_KEY: "public", VAPID_PRIVATE_KEY: "private" };
+
+    expect(() => loadConfig({ DATABASE_URL, ...keys })).toThrow(/VAPID_SUBJECT or APP_URL/);
+    expect(
+      loadConfig({ DATABASE_URL, ...keys, VAPID_SUBJECT: "mailto:ada@example.com" }),
+    ).toMatchObject({ VAPID_SUBJECT: "mailto:ada@example.com" });
+  });
+
   it("rejects an SMTP URL with another protocol", () => {
     expect(() =>
       loadConfig({

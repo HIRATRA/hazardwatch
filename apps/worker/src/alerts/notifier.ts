@@ -2,6 +2,7 @@ import { alertDigest, type Mailer } from "@hazardwatch/email";
 
 import type { Logger } from "../logger.js";
 import type { AlertEmail, AlertEmailRepository } from "./email-repository.js";
+import { groupByUser } from "./group.js";
 
 /**
  * How often waiting alerts are emailed. The alerts a user gets in between
@@ -86,18 +87,4 @@ export async function emailPendingAlerts({
     logger.info({ alerts: alerts.length, ...result }, "alert emails sent");
   }
   return result;
-}
-
-/** Splits alerts by user, keeping their order. */
-function groupByUser(alerts: readonly AlertEmail[]): AlertEmail[][] {
-  const groups = new Map<string, AlertEmail[]>();
-  for (const alert of alerts) {
-    const group = groups.get(alert.userId);
-    if (group) {
-      group.push(alert);
-    } else {
-      groups.set(alert.userId, [alert]);
-    }
-  }
-  return [...groups.values()];
 }
