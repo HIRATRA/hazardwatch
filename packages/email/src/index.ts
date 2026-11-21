@@ -5,4 +5,5 @@ export {
   type AlertDigestContent,
   type AlertSummary,
 } from "./templates/alert-digest.js";
+export { resetPassword, type ResetPasswordContent } from "./templates/reset-password.js";
 export { verifyEmail, type VerifyEmailContent } from "./templates/verify-email.js";

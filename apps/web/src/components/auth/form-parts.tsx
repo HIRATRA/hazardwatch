@@ -1,4 +1,9 @@
-import { ArrowRightIcon, CircleNotchIcon, WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  ArrowRightIcon,
+  CheckCircleIcon,
+  CircleNotchIcon,
+  WarningCircleIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import type { ReactNode } from "react";
 
 interface SubmitButtonProps {
@@ -43,6 +48,19 @@ export function FormAlert({ message }: { message: string }) {
     >
       <WarningCircleIcon aria-hidden className="text-danger mt-0.5 size-4 shrink-0" weight="fill" />
       {message}
+    </p>
+  );
+}
+
+/** A confirmation, such as a link sent or a password changed. */
+export function FormNotice({ children }: { children: ReactNode }) {
+  return (
+    <p
+      role="status"
+      className="border-accent/30 bg-accent/10 flex items-start gap-2.5 rounded-xl border px-3.5 py-3 text-sm text-neutral-100"
+    >
+      <CheckCircleIcon aria-hidden className="text-accent mt-0.5 size-4 shrink-0" weight="fill" />
+      <span>{children}</span>
     </p>
   );
 }

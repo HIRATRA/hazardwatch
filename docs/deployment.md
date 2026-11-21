@@ -113,20 +113,30 @@ The uptime monitor is no longer needed.
 
 ## 4. Email
 
-Any SMTP provider works. With Resend:
+Any SMTP provider works. Two constraints shape the choice: Render's free
+services cannot reach ports 25, 465 and 587, and most providers only send
+from a domain you own.
 
-1. Verify a domain you own, which lets Resend send from it.
-2. Create an API key.
-3. Set the variables below on both Vercel, for address confirmations, and
-   Render, for alert emails:
+**Without a domain: Brevo.** Its free plan sends 300 emails a day from a
+single confirmed address, and its relay also listens on port 2525.
 
-| Variable     | Value                                           |
-| ------------ | ----------------------------------------------- |
-| `SMTP_URL`   | `smtps://resend:<API key>@smtp.resend.com:2465` |
-| `EMAIL_FROM` | `HazardWatch <alerts@your-domain>`              |
+1. Create a Brevo account, then add and confirm the sender address under
+   **Senders, domains and dedicated IPs**.
+2. Under **SMTP and API**, note the SMTP login and generate an SMTP key.
+3. Set the variables below on both Vercel, for address confirmations and
+   password resets, and Render, for alert emails:
 
-Render's free services cannot reach ports 465 and 587, so use Resend's
-alternative SMTPS port, 2465, which works everywhere.
+| Variable     | Value                                                      |
+| ------------ | ---------------------------------------------------------- |
+| `SMTP_URL`   | `smtp://<SMTP login>:<SMTP key>@smtp-relay.brevo.com:2525` |
+| `EMAIL_FROM` | `HazardWatch <the confirmed sender address>`               |
+
+The SMTP login is not an address to send from: `EMAIL_FROM` must be the
+confirmed sender.
+
+**With a domain: Resend.** Verify the domain, create an API key and use
+`smtps://resend:<API key>@smtp.resend.com:2465`, with an address on that
+domain in `EMAIL_FROM`. Port 2465 works from Render too.
 
 Alerts are only emailed to confirmed addresses, so without email nobody
 receives them by email, but the rest of the app works.
