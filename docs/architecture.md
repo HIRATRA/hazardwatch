@@ -17,11 +17,13 @@ flowchart LR
     tiles["OpenFreeMap<br/>vector tiles"]
     imagery["NASA GIBS<br/>satellite imagery"]
     smtp["SMTP server<br/>Mailpit in development"]
+    pushService["Browser push services"]
 
     subgraph worker ["apps/worker"]
         scheduler["Scheduler"] --> adapters["Source adapters"]
         adapters --> repository["Ingestion repository"]
         scheduler --> notifier["Alert emails"]
+        scheduler --> pusher["Alert notifications"]
     end
 
     subgraph web ["apps/web (Next.js)"]
@@ -36,6 +38,7 @@ flowchart LR
         runs[("ingestion_runs")]
         zones[("watch_zones")]
         alerts[("zone_alerts")]
+        subscriptions[("push_subscriptions")]
         authTables[("user, session,<br/>account, verification")]
     end
 
@@ -45,6 +48,10 @@ flowchart LR
     repository -- "matches zones" --> alerts
     notifier -- "claims" --> alerts
     notifier -- "alert digests" --> smtp
+    pusher -- "claims" --> alerts
+    pusher -- "reads" --> subscriptions
+    pusher -- "notifications" --> pushService
+    pushService -- "push" --> browser
     browser --> pages
     browser --> actions
     browser --> authApi
@@ -56,6 +63,7 @@ flowchart LR
     pages --> alerts
     actions --> zones
     actions --> alerts
+    actions --> subscriptions
     authApi --> authTables
     authApi -- "address confirmations" --> smtp
 ```
@@ -132,6 +140,15 @@ only integration point between the web app and the worker.
   the header shows how many are unread. Opening an alert goes through a
   server action that marks it as read, then shows the event on its zone's
   map. A plain link would be prefetched and mark alerts as read on its own.
+- **Push notifications.** When `VAPID_PUBLIC_KEY` is set, the alerts page
+  lets the user turn notifications on for the current device. It registers
+  `/sw.js`, a service worker that shows the notifications the worker pushes
+  and opens the page they point to, and saves the browser's subscription
+  through a server action (see
+  [ADR 0013](adr/0013-push-alerts-with-web-push-from-the-worker.md)).
+  Signing out removes the current browser's subscription. A web app
+  manifest makes the app installable, which iPhones require for
+  notifications.
 - **Code shared with the browser.** Client components import domain values
   from `@hazardwatch/db/constants`, a dependency-free entry point. The main
   entry point pulls in Drizzle and the PostgreSQL driver and is reserved
@@ -171,6 +188,13 @@ only integration point between the web app and the worker.
   Claiming locks rows with `FOR UPDATE SKIP LOCKED`, so concurrent workers
   never send the same alert, and a failed message puts its alerts back in
   the queue. Without `SMTP_URL`, this task does not run.
+- **Alert notifications.** Every minute, the worker claims the unread alerts
+  raised in the past hour for users with a subscribed browser, and pushes
+  each user one notification to each of their browsers with `web-push` (see
+  [ADR 0013](adr/0013-push-alerts-with-web-push-from-the-worker.md)).
+  Browsers whose push service says they are gone are forgotten, and alerts
+  no browser could take go back in the queue. Without the VAPID keys, this
+  task does not run.
 - **Health endpoint.** When `PORT` is set, the worker answers health checks
   on `/health`, for hosts that run it as a web service, such as Render's
   free plan (see [ADR 0010](adr/0010-run-the-worker-as-a-free-render-web-service.md)).
@@ -288,6 +312,7 @@ agricultural burns, are left out:
 | `ingestion_runs`                             | Audit trail of each polling pass, used for monitoring       |
 | `watch_zones`                                | Areas watched by each user, as a centre and a radius        |
 | `zone_alerts`                                | Events that reached a zone, one per zone and event          |
+| `push_subscriptions`                         | Browsers that receive a user's alerts as notifications      |
 | `user`, `session`, `account`, `verification` | Better Auth accounts and sessions                           |
 
 `hazard_events` stores its position as a PostGIS `geometry(Point, 4326)`
@@ -322,7 +347,13 @@ event.
 `watch_zones.email_alerts` says whether a zone's alerts are also emailed,
 and `zone_alerts.emailed_at` when an alert was handed to the email server.
 Alerts still waiting have none, and a partial index on them keeps the
-worker's lookup small.
+worker's lookup small. `zone_alerts.pushed_at` works the same way for push
+notifications.
+
+A push subscription holds what the Push API gives for a browser: the
+endpoint of its push service, unique to that browser, and the keys that
+encrypt messages for it. Subscriptions are deleted with their owner's
+account.
 
 ## Ingestion flow
 
@@ -360,6 +391,9 @@ in [the deployment guide](deployment.md).
 | `SMTP_URL`           | web, worker | SMTP server for outgoing email. No email is sent without it    |
 | `EMAIL_FROM`         | web, worker | Sender of every email, as `Name <address>`                     |
 | `APP_URL`            | worker      | Public URL of the web application, for links in alert emails   |
+| `VAPID_PUBLIC_KEY`   | web, worker | Public key of push notifications. None are offered without it  |
+| `VAPID_PRIVATE_KEY`  | worker      | Private key that signs push notifications                      |
+| `VAPID_SUBJECT`      | worker      | Contact for push services. Defaults to `APP_URL` over https    |
 | `LOG_LEVEL`          | worker      | `fatal`, `error`, `warn`, `info` (default), `debug` or `trace` |
 | `PORT`               | worker      | Optional port of the health endpoint, set by the host          |
 

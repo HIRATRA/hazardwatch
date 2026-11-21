@@ -36,7 +36,7 @@ formats into a single kind of event and stores them in PostGIS. The web app
 shows them on a 3D globe, over live satellite imagery if you like, and lets
 you draw watch zones around the places you care about: an office, a
 supplier, a family's town. When an event reaches one of them, you get an
-alert in the app and by email.
+alert in the app, by email and as a notification on your devices.
 
 Everything runs on public data and free hosting tiers, without a single API
 key.
@@ -82,7 +82,9 @@ NASA GIBS.
 A watch zone is a circle of 10 to 1,000 km around any point, drawn on the
 map or typed in. Its page shows the hazards inside it. When a new event
 reaches a zone at or above the severity chosen for it, an alert appears in
-the app and, once the address is confirmed, in a digest email.
+the app and, once the address is confirmed, in a digest email. Turn
+notifications on from the alerts page, and each device you choose gets
+them within a minute, phones included once the app is installed.
 
 <table>
   <tr>
@@ -117,6 +119,7 @@ flowchart LR
     db[("PostgreSQL + PostGIS<br/>on Neon")]
     web["Web app<br/>Next.js on Vercel"]
     smtp["SMTP<br/>alert emails"]
+    push["Browser push services<br/>notifications"]
     browser(("Browser"))
     gibs["NASA GIBS<br/>satellite imagery"]
     tiles["OpenFreeMap<br/>vector tiles"]
@@ -124,6 +127,8 @@ flowchart LR
     usgs & firms & gdacs -- "polled every 1 to 30 min" --> worker
     worker -- "upserts events,<br/>raises zone alerts" --> db
     worker -- "digests" --> smtp
+    worker -- "notifications" --> push
+    push --> browser
     web -- "events, zones, alerts" --> db
     browser --> web
     browser -- "basemap" --> tiles
@@ -137,8 +142,10 @@ flowchart LR
 2. **Alerts.** In the same transaction that writes the events, a single
    PostGIS query matches them against every watch zone, on the surface of
    the Earth, and raises the alerts that pass each zone's threshold.
-3. **Email.** Every two minutes, the worker claims the alerts waiting for
-   an email and sends each confirmed user one digest.
+3. **Email and push.** Every two minutes, the worker claims the alerts
+   waiting for an email and sends each confirmed user one digest. Every
+   minute, it pushes the new ones to the browsers that turned
+   notifications on, through the Web Push protocol.
 4. **Web.** Pages are React Server Components reading the database. The
    map runs MapLibre in the browser, which also loads the imagery from NASA
    directly, so the server never proxies a tile.
