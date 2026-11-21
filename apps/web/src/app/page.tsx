@@ -30,7 +30,7 @@ export default async function HomePage() {
       <main>
         <Hero events={peaks} />
         <LiveSummary counts={counts} />
-        <Features />
+        <Features events={events} now={now} />
         <Sources />
         <Closing />
       </main>
