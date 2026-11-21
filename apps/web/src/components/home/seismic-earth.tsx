@@ -28,6 +28,16 @@ const PEAK_WIDTH_DEGREES = 1.1;
 /** Lines appear from north to south over about this long when the page opens. */
 const INTRO_ROW_DELAY_MS = 18;
 const INTRO_ROW_MS = 900;
+/**
+ * Most pixels drawn per frame. The field is redrawn whole every frame, and
+ * on integrated graphics its cost grows with the canvas, so large screens
+ * draw at a lower resolution, which thin lines on a dark field hide well.
+ */
+const MAX_CANVAS_PIXELS = 1_600_000;
+/** Shortest time between two frames once the lines are in: 30 per second. */
+const FRAME_INTERVAL_MS = 1000 / 30;
+/** The field holds still while the page scrolls, and moves again this long after. */
+const SCROLL_REST_MS = 180;
 
 const wrap = (value: number, size: number) => ((value % size) + size) % size;
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
@@ -108,6 +118,9 @@ interface SeismicEarthProps {
  * eastwards, recent events pulse, and lines swell under the mouse. Users
  * who prefer reduced motion get a still picture.
  *
+ * Drawing the field is heavy for integrated graphics, so it is redrawn 30
+ * times a second at most, and not at all while the page scrolls.
+ *
  * The canvas takes the background colour of its parent, which must be set,
  * its text colour for the lines, and the accent colour for the peaks.
  */
@@ -148,8 +161,8 @@ export function SeismicEarth({ events, className = "" }: SeismicEarthProps) {
       height = host!.clientHeight;
       // Sharp on high density screens, without drawing millions of pixels.
       let ratio = Math.min(window.devicePixelRatio || 1, 2);
-      if (width * height * ratio * ratio > 5_000_000) {
-        ratio = Math.sqrt(5_000_000 / (width * height));
+      if (width * height * ratio * ratio > MAX_CANVAS_PIXELS) {
+        ratio = Math.sqrt(MAX_CANVAS_PIXELS / (width * height));
       }
       canvas!.width = Math.round(width * ratio);
       canvas!.height = Math.round(height * ratio);
@@ -337,8 +350,17 @@ export function SeismicEarth({ events, className = "" }: SeismicEarthProps) {
 
     let frame = 0;
     let running = false;
+    let visible = false;
+    let scrolling = false;
+    let scrollTimer = 0;
+    let lastDrawn = 0;
+    // The intro plays at full rate, then the slow drift needs fewer frames.
+    const introEnd = INTRO_ROW_DELAY_MS * ROWS + INTRO_ROW_MS;
     const loop = (now: number) => {
-      draw(now);
+      if (now - startedAt < introEnd || now - lastDrawn >= FRAME_INTERVAL_MS - 2) {
+        lastDrawn = now;
+        draw(now);
+      }
       frame = requestAnimationFrame(loop);
     };
     const start = () => {
@@ -351,6 +373,27 @@ export function SeismicEarth({ events, className = "" }: SeismicEarthProps) {
       running = false;
       cancelAnimationFrame(frame);
     };
+    // Runs while the field is in view and the page is not scrolling.
+    const update = () => {
+      if (visible && !scrolling) {
+        start();
+      } else {
+        stop();
+      }
+    };
+
+    // Scrolling and the scroll-linked parallax of the hero get the frames to
+    // themselves. The field moves so slowly that a pause goes unnoticed.
+    const onScroll = () => {
+      scrolling = true;
+      update();
+      window.clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(() => {
+        scrolling = false;
+        update();
+      }, SCROLL_REST_MS);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     resize();
     draw(performance.now());
@@ -363,11 +406,8 @@ export function SeismicEarth({ events, className = "" }: SeismicEarthProps) {
 
     // Nothing moves while the field is scrolled out of view.
     const visibility = new IntersectionObserver(([entry]) => {
-      if (entry?.isIntersecting) {
-        start();
-      } else {
-        stop();
-      }
+      visible = entry?.isIntersecting ?? false;
+      update();
     });
     visibility.observe(host);
 
@@ -393,6 +433,8 @@ export function SeismicEarth({ events, className = "" }: SeismicEarthProps) {
 
     return () => {
       stop();
+      window.clearTimeout(scrollTimer);
+      window.removeEventListener("scroll", onScroll);
       resizeObserver.disconnect();
       visibility.disconnect();
       host.removeEventListener("pointermove", onPointerMove);

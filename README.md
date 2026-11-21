@@ -41,9 +41,11 @@ alert in the app, by email and as a notification on your devices.
 Everything runs on public data and free hosting tiers, without a single API
 key.
 
+<img src="docs/screenshots/features.jpg" alt="The home page tiles, alive with the events of the past day: events placed over the latest clouds of GOES-East, a watch zone around Paris swept like a radar over the city lights of Europe, and an alert notification" />
+
 ### A live globe of every hazard
 
-<img src="docs/screenshots/live-map.jpg" alt="The live map: a globe with clusters of events coloured by severity, the heat of fires across the Sahel, and the list of events beside it" />
+<img src="docs/screenshots/live-map.jpg" alt="The live map: a globe with clusters of events coloured by severity, the heat of fires across Africa, and the list of events beside it" />
 
 - **Every source on one map.** Earthquakes from USGS, fires detected from
   orbit by NASA FIRMS, cyclones, floods, volcanoes and droughts from GDACS,
@@ -77,7 +79,16 @@ NASA GIBS.
 
 ### Watch zones and alerts
 
-<img src="docs/screenshots/zone.jpg" alt="A watch zone page: a 500 km circle around Bangui with the fires detected inside it, and their list" />
+<table>
+  <tr>
+    <td valign="top" width="50%"><img src="docs/screenshots/zones.jpg" alt="The watch zones page: three zones, each with its recent events and its alert threshold" /></td>
+    <td valign="top" width="50%"><img src="docs/screenshots/zone.jpg" alt="A watch zone page: a 500 km circle around Bangui with the fires detected inside it, and their list" /></td>
+  </tr>
+  <tr>
+    <td valign="top"><strong>Your zones</strong>, each with its recent events and the most severe of them.</td>
+    <td valign="top"><strong>A zone's page</strong>, with the hazards inside it on the map and in a list.</td>
+  </tr>
+</table>
 
 A watch zone is a circle of 10 to 1,000 km around any point, drawn on the
 map or typed in. Its page shows the hazards inside it. When a new event
@@ -88,7 +99,7 @@ them within a minute, phones included once the app is installed.
 
 <table>
   <tr>
-    <td valign="top" width="58%"><img src="docs/screenshots/alerts.jpg" alt="The alerts page, listing two fires that reached a watch zone" /></td>
+    <td valign="top" width="58%"><img src="docs/screenshots/alerts.jpg" alt="The alerts page: push notifications to turn on, and fires that reached a watch zone, coloured by severity" /></td>
     <td valign="top" width="42%"><img src="docs/screenshots/email.jpg" alt="The alert email: two events reached your watch zones, with a link to all alerts" /></td>
   </tr>
   <tr>
@@ -96,6 +107,14 @@ them within a minute, phones included once the app is installed.
     <td valign="top"><strong>By email</strong>, in one digest every two minutes at most.</td>
   </tr>
 </table>
+
+### A dashboard for your places
+
+<img src="docs/screenshots/dashboard.jpg" alt="The dashboard: zones watched, unread alerts and events worldwide, the busiest zones, the latest alerts, the state of each data feed and the events of the past day by kind" />
+
+Once signed in, the dashboard sums up your account: the zones with the most
+severe recent events, the latest alerts, whether each data feed is up to
+date, and what the planet looked like over the past day.
 
 ### On any screen
 
