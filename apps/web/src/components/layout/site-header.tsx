@@ -3,6 +3,8 @@ import type { CSSProperties, ReactNode } from "react";
 
 import { LogoMark } from "@/components/brand/logo";
 
+import { NavLink } from "./nav-link";
+
 interface SiteHeaderProps {
   /** Actions shown on the right, typically account links. */
   children?: ReactNode;
@@ -25,10 +27,10 @@ export function SiteHeader({
   className = "",
   style,
 }: SiteHeaderProps) {
-  const column = fullWidth ? "" : overlay ? "mx-auto max-w-7xl" : "mx-auto max-w-5xl";
+  const column = fullWidth ? "" : overlay ? "mx-auto max-w-7xl" : "mx-auto max-w-6xl";
   return (
     <header
-      className={`${overlay ? "absolute inset-x-0 top-0 z-10" : "border-border border-b"} ${className}`}
+      className={`${overlay ? "absolute inset-x-0 top-0 z-10" : "border-b border-white/10"} ${className}`}
       style={style}
     >
       <div
@@ -44,12 +46,8 @@ export function SiteHeader({
             HazardWatch
           </Link>
           <nav aria-label="Main" className="flex items-center gap-4 text-sm whitespace-nowrap">
-            <Link href="/map" className="text-muted hover:text-neutral-100">
-              Live map
-            </Link>
-            <Link href="/zones" className="text-muted hover:text-neutral-100">
-              Watch zones
-            </Link>
+            <NavLink href="/map">Live map</NavLink>
+            <NavLink href="/zones">Watch zones</NavLink>
           </nav>
         </div>
         <div className="flex items-center gap-4 text-sm whitespace-nowrap">{children}</div>
@@ -67,7 +65,7 @@ export function GuestActions() {
       </Link>
       <Link
         href="/sign-up"
-        className="bg-accent hover:bg-accent-strong rounded-md px-3 py-1.5 font-medium text-neutral-950"
+        className="bg-accent hover:bg-accent-strong focus-visible:ring-accent focus-visible:ring-offset-ink rounded-full px-4 py-1.5 font-medium text-neutral-950 transition-[background-color,transform] outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-[0.98]"
       >
         Get started
       </Link>

@@ -43,11 +43,13 @@ export function Select({
   const lenis = useLenis();
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={`flex flex-col ${compact ? "gap-1.5" : "gap-2"}`}>
       <label
         id={labelId}
         htmlFor={triggerId}
-        className={compact ? "text-muted text-xs font-medium" : "text-sm font-medium"}
+        className={
+          compact ? "text-muted text-xs font-medium" : "text-sm font-medium text-neutral-200"
+        }
       >
         {label}
       </label>
@@ -63,7 +65,11 @@ export function Select({
           aria-labelledby={labelId}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errorId : undefined}
-          className={`group border-border bg-surface/80 focus-visible:border-accent focus-visible:ring-accent/30 aria-invalid:border-danger data-[state=open]:border-accent/60 flex w-full items-center justify-between gap-2 rounded-lg border text-left text-sm transition-colors outline-none hover:border-white/25 focus-visible:ring-2 disabled:opacity-60 ${compact ? "h-9 px-3" : "h-10 px-3.5"}`}
+          className={`group aria-invalid:border-danger data-[state=open]:border-accent/60 flex w-full items-center justify-between gap-2 border text-left text-sm transition-[border-color,background-color,box-shadow] outline-none disabled:opacity-60 ${
+            compact
+              ? "border-border bg-surface/80 focus-visible:border-accent focus-visible:ring-accent/30 h-9 rounded-lg px-3 hover:border-white/25 focus-visible:ring-2"
+              : "focus-visible:border-accent/70 focus-visible:ring-accent/20 h-11 rounded-xl border-white/10 bg-white/[0.03] px-3.5 hover:border-white/20 focus-visible:ring-4"
+          }`}
         >
           <span className="truncate">
             {/* Rendered by the server too, before the list mounts in the browser. */}
