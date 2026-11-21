@@ -95,18 +95,18 @@ export function PushToggle({ publicKey }: { publicKey: string }) {
   return (
     <section
       aria-labelledby="push-heading"
-      className="border-border bg-surface flex flex-wrap items-center gap-4 rounded-lg border px-4 py-3"
+      className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-white/10 bg-white/[0.02] px-4 py-3.5"
     >
       <span
         aria-hidden
-        className={`flex size-9 shrink-0 items-center justify-center rounded-md ${
-          status === "on" ? "bg-accent/15 text-accent" : "bg-surface-raised text-muted"
+        className={`grid size-9 shrink-0 place-items-center rounded-xl transition-colors ${
+          status === "on" ? "bg-accent/15 text-accent" : "text-muted bg-white/[0.05]"
         }`}
       >
         <Icon size={18} weight={status === "on" ? "fill" : "regular"} />
       </span>
-      <div className="min-w-0 flex-1">
-        <h2 id="push-heading" className="text-sm font-medium">
+      <div className="min-w-0 flex-1 basis-56">
+        <h2 id="push-heading" className="text-sm font-medium text-neutral-100">
           Push notifications
         </h2>
         <p className="text-muted text-sm" aria-live="polite">
@@ -114,12 +114,17 @@ export function PushToggle({ publicKey }: { publicKey: string }) {
         </p>
       </div>
       {status === "off" && (
-        <Button onClick={() => void turnOn()} disabled={pending}>
+        <Button onClick={() => void turnOn()} disabled={pending} className="h-9 px-4">
           {pending ? "Turning on…" : "Turn on"}
         </Button>
       )}
       {status === "on" && (
-        <Button variant="ghost" onClick={() => void turnOff()} disabled={pending}>
+        <Button
+          variant="ghost"
+          onClick={() => void turnOff()}
+          disabled={pending}
+          className="h-9 px-4"
+        >
           {pending ? "Turning off…" : "Turn off"}
         </Button>
       )}

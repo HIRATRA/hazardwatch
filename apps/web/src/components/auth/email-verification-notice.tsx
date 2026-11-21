@@ -1,5 +1,6 @@
 "use client";
 
+import { EnvelopeSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 
 import { authClient } from "@/lib/auth-client";
@@ -28,33 +29,41 @@ export function EmailVerificationNotice({
   return (
     <div
       role="status"
-      className={`border-accent/40 bg-accent/10 rounded-lg border px-4 py-3 text-sm ${className}`}
+      className={`border-accent/25 bg-accent/[0.07] flex items-start gap-3.5 rounded-2xl border px-4 py-3.5 text-sm ${className}`}
     >
-      {invalidLink ? (
-        <p>
-          This confirmation link is invalid or has expired. Ask for a new one to confirm{" "}
-          <span className="font-medium">{email}</span>.
-        </p>
-      ) : (
-        <p>
-          Confirm your email address to receive alerts by email. We sent a link to{" "}
-          <span className="font-medium">{email}</span>.
-        </p>
-      )}
-      <p className="text-muted mt-1">
-        {status === "sent" && "A new link is on its way."}
-        {status === "failed" && "The link could not be sent. Try again in a moment."}
-        {(status === "idle" || status === "sending") && (
-          <button
-            type="button"
-            onClick={() => void resend()}
-            disabled={status === "sending"}
-            className="text-accent focus-visible:ring-accent rounded outline-none hover:underline focus-visible:ring-2 disabled:opacity-60"
-          >
-            {status === "sending" ? "Sending…" : "Send a new link"}
-          </button>
+      <span
+        aria-hidden
+        className="bg-accent/15 text-accent grid size-9 shrink-0 place-items-center rounded-xl"
+      >
+        <EnvelopeSimpleIcon className="size-[18px]" weight="fill" />
+      </span>
+      <div className="min-w-0 flex-1 pt-0.5">
+        {invalidLink ? (
+          <p className="text-neutral-100">
+            This confirmation link is invalid or has expired. Ask for a new one to confirm{" "}
+            <span className="font-medium">{email}</span>.
+          </p>
+        ) : (
+          <p className="text-neutral-100">
+            Confirm your email address to receive alerts by email. We sent a link to{" "}
+            <span className="font-medium">{email}</span>.
+          </p>
         )}
-      </p>
+        <p className="text-muted mt-1">
+          {status === "sent" && "A new link is on its way."}
+          {status === "failed" && "The link could not be sent. Try again in a moment."}
+          {(status === "idle" || status === "sending") && (
+            <button
+              type="button"
+              onClick={() => void resend()}
+              disabled={status === "sending"}
+              className="text-accent focus-visible:ring-accent rounded-sm underline decoration-current/30 underline-offset-4 outline-none transition-colors hover:decoration-current focus-visible:ring-2 disabled:opacity-60"
+            >
+              {status === "sending" ? "Sending…" : "Send a new link"}
+            </button>
+          )}
+        </p>
+      </div>
     </div>
   );
 }

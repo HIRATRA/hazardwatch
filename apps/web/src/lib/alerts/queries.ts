@@ -9,6 +9,7 @@ import {
   isNull,
   watchZones,
   zoneAlerts,
+  type HazardKind,
   type HazardSeverity,
 } from "@hazardwatch/db";
 import { cache } from "react";
@@ -26,6 +27,7 @@ export interface AlertItem {
   /** ISO 8601 time at which the alert was last raised. */
   raisedAt: string;
   read: boolean;
+  eventKind: HazardKind;
   eventTitle: string;
   zoneName: string;
 }
@@ -39,14 +41,25 @@ export interface AlertsResult {
   generatedAt: string;
 }
 
+interface ListAlertsOptions {
+  /** Most alerts to return, at most 100. */
+  limit?: number;
+  now?: Date;
+}
+
 /** The alerts raised for the user's zones, most recent first. */
-export async function listAlerts(userId: string, now = new Date()): Promise<AlertsResult> {
+export async function listAlerts(
+  userId: string,
+  { limit = MAX_ALERTS, now = new Date() }: ListAlertsOptions = {},
+): Promise<AlertsResult> {
+  const size = Math.min(limit, MAX_ALERTS);
   const rows = await db
     .select({
       id: zoneAlerts.id,
       severity: zoneAlerts.severity,
       raisedAt: zoneAlerts.raisedAt,
       readAt: zoneAlerts.readAt,
+      eventKind: hazardEvents.kind,
       eventTitle: hazardEvents.title,
       zoneName: watchZones.name,
     })
@@ -55,15 +68,15 @@ export async function listAlerts(userId: string, now = new Date()): Promise<Aler
     .innerJoin(hazardEvents, eq(hazardEvents.id, zoneAlerts.eventId))
     .where(eq(watchZones.userId, userId))
     .orderBy(desc(zoneAlerts.raisedAt), desc(zoneAlerts.id))
-    .limit(MAX_ALERTS + 1);
+    .limit(size + 1);
 
   return {
-    alerts: rows.slice(0, MAX_ALERTS).map(({ raisedAt, readAt, ...alert }) => ({
+    alerts: rows.slice(0, size).map(({ raisedAt, readAt, ...alert }) => ({
       ...alert,
       raisedAt: raisedAt.toISOString(),
       read: readAt !== null,
     })),
-    truncated: rows.length > MAX_ALERTS,
+    truncated: rows.length > size,
     generatedAt: now.toISOString(),
   };
 }

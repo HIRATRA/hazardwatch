@@ -32,14 +32,16 @@ export default async function EditZonePage({ params }: PageProps<"/zones/[id]/ed
           submitLabel="Save changes"
           cancelHref={`/zones/${zone.id}`}
         >
-          <section aria-labelledby="delete-zone-title" className="border-border border-t p-6">
-            <h2 id="delete-zone-title" className="text-sm font-medium">
-              Delete this zone
-            </h2>
-            <p className="text-muted mt-1 mb-4 text-sm">
-              The zone stops being watched. Events are not affected.
-            </p>
-            <DeleteZoneButton zoneId={zone.id} zoneName={zone.name} />
+          <section aria-labelledby="delete-zone-title" className="px-6 pb-8">
+            <div className="border-danger/20 bg-danger/[0.04] rounded-2xl border p-5">
+              <h2 id="delete-zone-title" className="text-sm font-medium text-neutral-100">
+                Delete this zone
+              </h2>
+              <p className="text-muted mt-1 mb-4 text-sm">
+                The zone stops being watched and its alerts go with it. Events are not affected.
+              </p>
+              <DeleteZoneButton zoneId={zone.id} zoneName={zone.name} />
+            </div>
           </section>
         </ZoneForm>
       </main>
