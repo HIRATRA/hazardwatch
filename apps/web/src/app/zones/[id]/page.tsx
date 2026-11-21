@@ -1,3 +1,4 @@
+import { ArrowLeftIcon, PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -37,17 +38,27 @@ export default async function ZonePage({ params, searchParams }: PageProps<"/zon
         <AccountActions />
       </SiteHeader>
       <main className="flex min-h-0 flex-1 flex-col">
-        <div className="border-border flex items-center justify-between gap-4 border-b px-6 py-3">
-          <div className="min-w-0">
-            <Link href="/zones" className="text-muted text-xs hover:text-neutral-100">
-              Watch zones
+        <div className="bg-ink flex items-center justify-between gap-4 border-b border-white/10 px-6 py-3.5">
+          <div className="flex min-w-0 items-center gap-4">
+            <Link
+              href="/zones"
+              aria-label="Back to watch zones"
+              className="text-muted focus-visible:ring-accent grid size-9 shrink-0 place-items-center rounded-full border border-white/10 transition-[border-color,color,background-color] outline-none hover:border-white/25 hover:bg-white/5 hover:text-neutral-100 focus-visible:ring-2"
+            >
+              <ArrowLeftIcon aria-hidden className="size-4" />
             </Link>
-            <h1 className="truncate text-lg font-semibold">{zone.name}</h1>
-            <p className="text-muted text-xs">
-              {describeZoneArea(zone)} · {describeAlerts(zone)}
-            </p>
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-light tracking-tight">{zone.name}</h1>
+              <p className="text-muted truncate font-mono text-xs">
+                {describeZoneArea(zone)} · {describeAlerts(zone)}
+              </p>
+            </div>
           </div>
-          <Link href={`/zones/${zone.id}/edit`} className={buttonClassName("ghost", "shrink-0")}>
+          <Link
+            href={`/zones/${zone.id}/edit`}
+            className={buttonClassName("ghost", "h-9 shrink-0 px-4")}
+          >
+            <PencilSimpleIcon aria-hidden className="size-4" />
             Edit
           </Link>
         </div>

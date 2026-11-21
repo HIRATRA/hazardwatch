@@ -7,12 +7,13 @@ interface FieldProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string | undefined;
 }
 
+/** A text input with its label above, styled like the sign in form. */
 export function Field({ label, name, id, error, ...props }: FieldProps) {
   const inputId = id ?? name;
   const errorId = `${inputId}-error`;
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={inputId} className="text-sm font-medium">
+    <div className="flex flex-col gap-2">
+      <label htmlFor={inputId} className="text-sm font-medium text-neutral-200">
         {label}
       </label>
       <input
@@ -20,7 +21,7 @@ export function Field({ label, name, id, error, ...props }: FieldProps) {
         name={name}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        className="border-border bg-surface focus:border-accent focus:ring-accent/30 aria-invalid:border-danger rounded-md border px-3 py-2 text-sm outline-none focus:ring-2"
+        className="focus:border-accent/70 focus:ring-accent/20 aria-invalid:border-danger/70 h-11 w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 text-sm text-neutral-100 transition-[border-color,background-color,box-shadow] outline-none placeholder:text-neutral-500 hover:border-white/20 focus:bg-white/[0.05] focus:ring-4"
         {...props}
       />
       {error && (

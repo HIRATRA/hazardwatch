@@ -1,13 +1,15 @@
 "use client";
 
 import { defaultAlertMinSeverity } from "@hazardwatch/db/constants";
+import { ArrowLeftIcon, CircleNotchIcon, CrosshairIcon } from "@phosphor-icons/react/dist/ssr";
 import type { Route } from "next";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useActionState, useState, type ReactNode } from "react";
 
 import type { ZoneFormState } from "@/app/zones/actions";
-import { Button, buttonClassName } from "@/components/ui/button";
+import { FormAlert } from "@/components/auth/form-parts";
+import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Select } from "@/components/ui/select";
 import { alertThresholdLabels, formatRadius } from "@/lib/zones/format";
@@ -29,7 +31,7 @@ const ZonePickerMap = dynamic(
   () => import("./zone-picker-map").then((module) => module.ZonePickerMap),
   {
     ssr: false,
-    loading: () => <div className="bg-surface-raised absolute inset-0 animate-pulse" />,
+    loading: () => <div className="bg-ink absolute inset-0 animate-pulse" />,
   },
 );
 
@@ -110,11 +112,21 @@ export function ZoneForm<CancelRoute extends string>({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-      <div className="border-border order-2 min-h-0 flex-1 overflow-y-auto border-t md:order-1 md:w-96 md:flex-none md:border-t-0 md:border-r">
-        <form action={formAction} className="flex flex-col gap-5 p-6">
+      <div className="bg-ink order-2 min-h-0 flex-1 overflow-y-auto border-t border-white/10 md:order-1 md:w-[26rem] md:flex-none md:border-t-0 md:border-r">
+        <form action={formAction} className="flex flex-col gap-6 p-6 md:p-8">
           <div>
-            <h1 className="text-xl font-semibold">{title}</h1>
-            <p className="text-muted mt-1 text-sm">
+            <Link
+              href={cancelHref}
+              className="group text-muted focus-visible:ring-accent inline-flex items-center gap-1.5 rounded-sm text-sm transition-colors outline-none hover:text-neutral-100 focus-visible:ring-2"
+            >
+              <ArrowLeftIcon
+                aria-hidden
+                className="size-3.5 transition-transform group-hover:-translate-x-0.5"
+              />
+              Back
+            </Link>
+            <h1 className="mt-5 text-3xl font-light tracking-tight">{title}</h1>
+            <p className="text-muted mt-2 text-sm leading-relaxed text-pretty">
               Click the map to place the centre of the zone. Events located within the radius belong
               to it.
             </p>
@@ -142,7 +154,9 @@ export function ZoneForm<CancelRoute extends string>({
           />
 
           <fieldset className="flex flex-col gap-3">
-            <legend className="mb-1.5 text-sm font-medium">Centre</legend>
+            <legend className="mb-1 font-mono text-xs tracking-[0.2em] text-neutral-400 uppercase">
+              Centre
+            </legend>
             <div className="grid grid-cols-2 gap-3">
               <Field
                 label="Latitude"
@@ -179,8 +193,13 @@ export function ZoneForm<CancelRoute extends string>({
                 type="button"
                 onClick={locate}
                 disabled={locationStatus === "locating"}
-                className="text-accent focus-visible:ring-accent rounded text-sm outline-none hover:underline focus-visible:ring-2 disabled:opacity-60"
+                className="focus-visible:ring-accent inline-flex h-8 items-center gap-1.5 rounded-full border border-white/10 px-3 text-xs font-medium text-neutral-200 transition-[border-color,background-color,transform] outline-none hover:border-white/25 hover:bg-white/5 focus-visible:ring-2 active:scale-[0.98] disabled:opacity-60"
               >
+                {locationStatus === "locating" ? (
+                  <CircleNotchIcon aria-hidden className="size-3.5 animate-spin" weight="bold" />
+                ) : (
+                  <CrosshairIcon aria-hidden className="text-accent size-3.5" />
+                )}
                 {locationStatus === "locating" ? "Locating…" : "Use my location"}
               </button>
               {locationStatus === "failed" && (
@@ -200,16 +219,16 @@ export function ZoneForm<CancelRoute extends string>({
             error={errors.alertMinSeverity}
           />
 
-          <label className="-mt-2 flex items-start gap-2 text-sm">
+          <label className="-mt-1 flex cursor-pointer items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-sm transition-colors hover:border-white/20 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
             <input
               type="checkbox"
               name="emailAlerts"
               checked={emailAlerts}
               onChange={(event) => setEmailAlerts(event.target.checked)}
               disabled={alertMinSeverity === ALERTS_OFF}
-              className="accent-accent mt-0.5 size-4"
+              className="accent-accent mt-0.5 size-4 shrink-0"
             />
-            <span>
+            <span className="text-neutral-100">
               Send these alerts by email too
               <span className="text-muted block text-xs">
                 Once your email address is confirmed.
@@ -221,17 +240,19 @@ export function ZoneForm<CancelRoute extends string>({
             <input type="hidden" name="emailAlerts" value="on" />
           )}
 
-          {errors.form && (
-            <p role="alert" className="text-danger text-sm">
-              {errors.form}
-            </p>
-          )}
+          {errors.form && <FormAlert message={errors.form} />}
 
-          <div className="flex gap-3">
-            <Button type="submit" disabled={pending}>
+          <div className="flex items-center gap-5 pt-1">
+            <Button type="submit" disabled={pending} className="h-11 px-6">
+              {pending && (
+                <CircleNotchIcon aria-hidden className="size-4 animate-spin" weight="bold" />
+              )}
               {pending ? "Saving…" : submitLabel}
             </Button>
-            <Link href={cancelHref} className={buttonClassName("ghost")}>
+            <Link
+              href={cancelHref}
+              className="text-muted focus-visible:ring-accent rounded-sm text-sm transition-colors outline-none hover:text-neutral-100 focus-visible:ring-2"
+            >
               Cancel
             </Link>
           </div>

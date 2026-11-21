@@ -17,7 +17,11 @@ export function DeleteZoneButton({ zoneId, zoneName }: DeleteZoneButtonProps) {
 
   if (!confirming) {
     return (
-      <Button variant="ghost" onClick={() => setConfirming(true)}>
+      <Button
+        variant="ghost"
+        className="border-danger/30 text-danger hover:border-danger/60 hover:bg-danger/10"
+        onClick={() => setConfirming(true)}
+      >
         Delete zone
       </Button>
     );
@@ -25,7 +29,7 @@ export function DeleteZoneButton({ zoneId, zoneName }: DeleteZoneButtonProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm">Delete “{zoneName}”? This cannot be undone.</p>
+      <p className="text-sm text-neutral-100">Delete “{zoneName}”? This cannot be undone.</p>
       <div className="flex gap-3">
         <Button
           variant="danger"

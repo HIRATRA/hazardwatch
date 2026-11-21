@@ -20,7 +20,12 @@ export function SignOutButton() {
   }
 
   return (
-    <Button variant="ghost" onClick={() => void handleClick()} disabled={pending}>
+    <Button
+      variant="ghost"
+      className="h-8 px-4"
+      onClick={() => void handleClick()}
+      disabled={pending}
+    >
       Sign out
     </Button>
   );
