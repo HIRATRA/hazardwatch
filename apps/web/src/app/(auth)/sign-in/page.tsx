@@ -2,13 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 
+import { FormNotice } from "@/components/auth/form-parts";
 import { SignInForm } from "@/components/auth/sign-in-form";
 
 export const metadata: Metadata = { title: "Sign in" };
 
 const delay = (milliseconds: number) => ({ "--delay": milliseconds }) as CSSProperties;
 
-export default function SignInPage() {
+export default async function SignInPage({ searchParams }: PageProps<"/sign-in">) {
+  const { reset } = await searchParams;
+
   return (
     <>
       <h1 className="rise-in text-3xl font-light tracking-tight sm:text-4xl" style={delay(0)}>
@@ -17,7 +20,10 @@ export default function SignInPage() {
       <p className="rise-in text-muted mt-3" style={delay(100)}>
         Sign in to follow your watch zones and alerts.
       </p>
-      <div className="rise-in mt-9" style={delay(200)}>
+      <div className="rise-in mt-9 flex flex-col gap-5" style={delay(200)}>
+        {reset === "done" && (
+          <FormNotice>Your password has changed. Sign in with the new one.</FormNotice>
+        )}
         <SignInForm />
       </div>
       <p className="rise-in text-muted mt-8 text-sm" style={delay(300)}>

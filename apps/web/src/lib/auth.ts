@@ -1,7 +1,7 @@
 import "server-only";
 
 import { account, session, user, verification } from "@hazardwatch/db";
-import { verifyEmail } from "@hazardwatch/email";
+import { resetPassword, verifyEmail } from "@hazardwatch/email";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
@@ -22,6 +22,17 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 10,
+    // One hour, as the email says, and every other session ends with the reset.
+    resetPasswordTokenExpiresIn: 60 * 60,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: ({ user, url }) => {
+      // Not awaited, like the verification email, so that response times do
+      // not reveal whether an account exists.
+      void mailer
+        ?.send({ to: user.email, ...resetPassword({ name: user.name, url }) })
+        .catch((error: unknown) => console.error("Failed to send the password reset email", error));
+      return Promise.resolve();
+    },
   },
   // Alerts are only emailed to confirmed addresses, so that nobody can sign
   // up with someone else's address and flood it.

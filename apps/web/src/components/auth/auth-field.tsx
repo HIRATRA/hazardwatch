@@ -2,7 +2,7 @@
 
 import type { Icon } from "@phosphor-icons/react";
 import { CheckIcon, EyeIcon, EyeSlashIcon } from "@phosphor-icons/react/dist/ssr";
-import { useId, useState, type InputHTMLAttributes } from "react";
+import { useId, useState, type InputHTMLAttributes, type ReactNode } from "react";
 
 interface AuthFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "id"> {
   label: string;
@@ -14,6 +14,8 @@ interface AuthFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "id
    * once it is reached.
    */
   lengthHint?: boolean;
+  /** Shown at the end of the label row, such as a link. */
+  labelAside?: ReactNode;
 }
 
 /**
@@ -26,6 +28,7 @@ export function AuthField({
   icon: Icon,
   type = "text",
   lengthHint = false,
+  labelAside,
   minLength,
   onChange,
   ...props
@@ -39,9 +42,12 @@ export function AuthField({
 
   return (
     <div className="flex flex-col gap-2">
-      <label htmlFor={id} className="text-sm font-medium text-neutral-200">
-        {label}
-      </label>
+      <div className="flex items-baseline justify-between gap-3">
+        <label htmlFor={id} className="text-sm font-medium text-neutral-200">
+          {label}
+        </label>
+        {labelAside}
+      </div>
       <div className="group relative">
         <Icon
           aria-hidden

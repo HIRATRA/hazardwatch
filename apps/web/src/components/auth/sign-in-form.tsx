@@ -1,6 +1,7 @@
 "use client";
 
 import { EnvelopeSimpleIcon, LockSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
@@ -53,6 +54,14 @@ export function SignInForm() {
         type="password"
         icon={LockSimpleIcon}
         autoComplete="current-password"
+        labelAside={
+          <Link
+            href="/forgot-password"
+            className="text-muted text-xs underline-offset-4 transition-colors hover:text-neutral-100 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        }
         required
       />
       {error && <FormAlert message={error} />}
